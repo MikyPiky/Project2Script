@@ -14,6 +14,8 @@ This Script serves to make varios scatterplots
 '
 ###################
 ## Load Packages ##
+library(tidyverse)
+library(caret)   
 library(plm)
 library(boot)
 library(gtools)
@@ -25,17 +27,17 @@ library(rgdal)
 library(raster)
 library(rasterVis)
 library(maptools)
-library(stringr)
 library(classInt)
 library(RColorBrewer)
 library(stargazer)
 library(ggthemes)
-library(caret)   
-library(plyr)
+
 library(sf)
-library(tidyverse)
-library(ggplot2)  
+library(dplyr)
 library(grDevices)
+library(readr)
+library(ggplot2)
+library()
 
 ###############################
 #### Load observation data ####
@@ -50,25 +52,130 @@ Maize_obs <- Maize_meteo %>% select(comId, comState, year, siloMaize, siloMaizeA
 str(Maize_obs)
 rm(Maize_meteo)
 
-names(Maize_obs)[[5]] <- "siloMaizeAnomaly_obs"
-names(Maize_obs)[[4]] <- "siloMaize_obs"
+names(Maize_obs)[[5]] <- "MaizeAnomaly_obs"
+names(Maize_obs)[[4]] <- "Maize_obs"
 str(Maize_obs)
 
 #### Loop Preparation ####
 modelListMatrixNames <- list("lm.fit_SMI_6_Jun_Aug_modelmatrix", "lm.fit_SMI_6_Jul_modelmatrix")
+modelListTrainNames <- list("lm.fit_SMI_6_Jun_Aug_comId", "lm.fit_SMI_6_Jul_comId")
+
 namelist_models <- c("DMI","ICTP", "KNMI","MPI","SMHI")
 
-### Loop through prediction models ####
+
+
+
+########################################
+#### Loop through prediction models ####
 for (r in 1:length(modelListMatrixNames))
   {
+  
+  #####################################################################################################
+  #### Scatterplot of timer period 1999 - 2015 of simulated data using observed inputs of the time ####
+  #####################################################################################################
+  Maize_sim_train <-  read_csv(paste("./data/data_processed/Train/", modelListTrainNames[[r]],"/Yield_predict_allYears.csv", sep=""))
+  Maize_sim_train$X1 <- NULL
+  str(Maize_sim_train)
+  
+  names(Maize_sim_train)[[3]] <- "Maize_train"
+  names(Maize_sim_train)[[4]] <- "MaizeAnomaly_train"
+  
+  ####################
+  #### Merge Data ####
+  Maize_train <- merge(Maize_obs, Maize_sim_train, by = c( "comId", "year" ))
+  str(Maize_train)
+  
+  ##############################
+  #### Plot Absolute Values ####
+  scatterplot_train <-
+    ggplot(Maize_train, aes(x=siloMaize_train_sim, y=siloMaize_obs)) +
+    scale_x_continuous(limits = c(100, 800)) + 
+    scale_y_continuous(limits = c(100, 800)) + 
+    geom_point(shape=1)  +  
+    geom_smooth(mapping = aes(x=siloMaize_train_sim, y=siloMaize_obs),
+                method=lm,  
+                se=T,   
+                fullrange=TRUE,
+                inherit.aes = T) +
+    ggtitle(paste("Period 1999 to 2015 - Fitted vs. Observed")) +
+    theme_bw() + 
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  ggsave(paste("./figures/figures_exploratory/Train/", modelListTrainNames[[r]],"/Scatterplot/1999-2015.pdf", sep=""), plot = scatterplot_train, width=11, height=8)
+  
+  #############################
+  #### Plot Anomaly Values ####
+  scatterplot_train_Anomalies <-
+    ggplot(Maize_train, aes(x=siloMaizeAnomaly_train_sim, y=siloMaizeAnomaly_obs)) +
+    scale_x_continuous(limits = c(-300, 300)) +
+    scale_y_continuous(limits = c(-300, 300)) +
+    geom_point(shape=1)  +  
+    geom_smooth(mapping = aes(x=siloMaizeAnomaly_train_sim, y=siloMaizeAnomaly_obs),
+                method=lm,  
+                se=T,   
+                fullrange=TRUE,
+                inherit.aes = T) +
+    ggtitle(paste("Period 1999 to 2015 - Anomalies - Fitted vs. Observed")) +
+    theme_bw() + 
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  ggsave(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[r]],"/Scatterplot/1999-2015_model_Anomalies.pdf", sep=""), 
+         plot = scatterplot_1999_2015_RCMs_Anomalies, width=11, height=8)
+
+  ####################################################################################
+  #### Histogramm of observed and fitted maize yield for time period 1999 - 2015 #### 
+  ##################################################################################
+  
+  
+  ###############################################
+  #### Summary Maize_obs and Maize_sim_train ####
+  summary(Maize_train$siloMaizeAnomaly_obs)
+  summary(Maize_train$siloMaizeAnomaly_train_sim)
+  
+  ##################################################
+  #### Make a tidy.data. frame form Maize train ####
+  str(Maize_train)
+  Maize_train_tidier <- Maize_train %>% gather(type, yield, Maize_obs:MaizeAnomaly_train)
+  str(Maize_train_tidier)
+  Maize_train_tidy <-  Maize_train_tidier %>% separate(type, into=c("yield_type", "data_type"))
+  str(Maize_train_tidy)
+  
+  ##########################################
+  #### Histogramm of observed anoamlies ####
+  Maize_train_tidy_anomaly <- Maize_train_tidy %>% filter(yield_type == "MaizeAnomaly")
+  
+  ggplot(Maize_train_tidy_anomaly, aes(yield, colour=data_type  )) +
+    # facet_wrap(~yield_type) + 
+    geom_freqpoly()
+  
+  ####################################################
+  #### Kernel Densitiy Plot of observed anomalies ####
+  ggplot(Maize_obs, aes(siloMaizeAnomaly_obs  )) +
+    geom_density()
+  
+  ##########################################
+  #### Histogramm of observed anoamlies ####
+  ggplot(Maize_sim_train, aes(siloMaizeAnomaly_train_sim )) +
+    geom_histogram() 
+  
+  ####################################################
+  #### Kernel Densitiy Plot of observed anomalies ####
+  ggplot(Maize_sim_train, aes(siloMaizeAnomaly_train_sim )) +
+    geom_density()
+  
+  
+  ####################################################################################################################
+  #### Scatterplot of time period 1999 - 2015 of simulated data with RCMs against observed data - colors by RCMS ####
+  ##################################################################################################################
+  
+  ######################################################################
   #### Load simulated data derived from different prediction models ####
   Maize_sim_all <-  read.csv(paste("./data/data_proj/output/", modelListMatrixNames[[r]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv", sep=""))
   Maize_sim_all$X <- NULL
   str(Maize_sim_all)
   
-  #################################################################
-  #### Scatterplot of time period 1999 - 2015 - colors by RCMS ####
   
+  ###################################
   #### Select relevant variables #### 
   # names(Maize_sim_all )
   Maize_sim <- Maize_sim_all
@@ -84,6 +191,7 @@ for (r in 1:length(modelListMatrixNames))
   Maize_1999_2015_RCMs <- merge(Maize_sim, Maize_obs, by=c("comId", "year"))
   str(Maize_1999_2015_RCMs)
   
+  ##############################
   #### Plot Absolute Values ####
   scatterplot_1999_2015_RCMs <-
     ggplot(Maize_1999_2015_RCMs, aes(x=siloMaize_sim, y=siloMaize_obs, color = model)) +
@@ -102,6 +210,7 @@ for (r in 1:length(modelListMatrixNames))
   ggsave(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[r]],"/Scatterplot/1999-2015_model.pdf", sep=""), 
          plot = scatterplot_1999_2015_RCMs, width=11, height=8)
 
+  #############################
   #### Plot Anomaly Values ####
   scatterplot_1999_2015_RCMs_Anomalies <-
     ggplot(Maize_1999_2015_RCMs, aes(x=siloMaizeAnomaly_sim, y=siloMaizeAnomaly_obs, color = model)) +
