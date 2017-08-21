@@ -34,8 +34,8 @@
   '
 
 
-#### Dependencies and Input ####
-'- Meterological and SMI Data derived from the climate models ("DMI","ICTP","KNMI","MPI","SMHI") -> data_proj_Input
+#### Dependencies and input ####
+'- Meterological and SMI Data derived from the climate models ("DMI","ICTP","KNMI","MPI","SMHI") -> data_proj_input
  '
 
 #### Packages ####
@@ -48,7 +48,7 @@ library(plyr)
 library(ncdf4)
 library(zoo)
 library(foreign)
-library(maps)
+# library(maps)
 library(colorspace)
 library(lattice)
 library(stringr)
@@ -64,6 +64,7 @@ library(gridExtra)
 library(cowplot)
 library(grid)
 library(stargazer)
+library(xtable)
 
 
 ########################################################################################################################################################################################
@@ -73,11 +74,11 @@ library(stargazer)
 #### a1) reads in the netcdf output for Pre, Tavg, and SMI for the three regional climate models used (MPI, DMI, KNMI, ICTP, SMHI)
 #### a2) Extract to data.frame with the same time length
 #### a3) Appends data.frame on SpatialPolyonDataFrame with Spatial Information (vg2500_krs)
-#### a4) Export csv dataframes for each Input Variable seperately ( It is not possible to read in one large data.frame combining all information ) (Output Size = 200 MB)
+#### a4) Export csv dataframes for each input Variable seperately ( It is not possible to read in one large data.frame combining all information ) (Output Size = 200 MB)
 
 ##############################################################################################
 #### Load Shape with SpatialInformation for the Polygones of the Administrative Districts ####
-vg2500_krs <- read_sf("./data/data_proj/Input/CLC/", "vg2500_krs")
+vg2500_krs <- read_sf("./data/data_proj/input/CLC/", "vg2500_krs")
 str(vg2500_krs, 2)
 vg2500_krs$RS
 
@@ -88,14 +89,7 @@ vg2500_krs$RS
 
 ###############################
 ## Make namelist for loop ####
-namelist_MPI     <- c("mSMI_MPI",    "pre_lk_MPI",      "tavg_lk_MPI")
-namelist_DMI     <- c("mSMI_DMI",    "pre_lk_DMI",      "tavg_lk_DMI")
-namelist_KNMI    <- c("mSMI_KNMI",   "pre_lk_KNMI",     "tavg_lk_KNMI")
-namelist_ICTP    <- c("mSMI_ICTP",   "pre_lk_ICTP",     "tavg_lk_ICTP")
-namelist_SMHI <- c("mSMI_SMHI","pre_lk_SMHI",  "tavg_lk_SMHI")
-
-namelist <- list(namelist_MPI, namelist_DMI, namelist_KNMI, namelist_ICTP, namelist_SMHI )
-namelist
+namelist_var <- c("mSMI", "pre_lk", "tavg_lk")
 
 namelist_models <- c("DMI","ICTP", "KNMI","MPI","SMHI")
 
@@ -114,9 +108,9 @@ for (i in 1:5){
 
 ###################################  
 ## Directories to load data from ##
-SMI_directory <- paste("./data/data_proj/Input/", namelist[[i]][1],".nc", sep="")
-Pre_directory <- paste("./data/data_proj/Input/", namelist[[i]][2],".nc", sep="")
-Tav_directory <- paste("./data/data_proj/Input/", namelist[[i]][3],".nc", sep="")
+SMI_directory <- paste("./data/data_proj/input/", namelist_var[1],"_", namelist_models[i], ".nc", sep="")
+Pre_directory <- paste("./data/data_proj/input/", namelist_var[2],"_", namelist_models[i], ".nc", sep="")
+Tav_directory <- paste("./data/data_proj/input/", namelist_var[3],"_", namelist_models[i], ".nc", sep="")
 
 ####################
 #### Load NETCDF ###
@@ -147,7 +141,7 @@ print(dim(Pre))
 Tav <- as.data.frame(Tav[1:412, 1:1788])
 print(dim(Tav))
 # (Tav[1:412, 1:1788])
-SMI <- as.data.frame(SMI[1:412, 1:1788])
+SMI <- as.data.frame(SMI[1:412,1:1788])
 
 print(dim(SMI))
 # (SMI[1:412, 1:1788])
@@ -203,9 +197,15 @@ str(List_DataWide,1)
 #######################
 #### Change Names ####
 #####################
+## 1951 - 2099
 idx_SM  <- make.names(c(gsub(" ","", paste("SMI",as.yearmon(seq(from=as.Date('1951-1-1'), to=as.Date('2099-12-1'), 'month')), sep=""))), unique = TRUE)
 idx_Pre <- make.names(c(gsub(" ","", paste("P",as.yearmon(seq(from=as.Date('1951-1-1'), to=as.Date('2099-12-1'), 'month')), sep=""))), unique = TRUE)
 idx_Tav <- make.names(c(gsub(" ","", paste("T",as.yearmon(seq(from=as.Date('1951-1-1'), to=as.Date('2099-12-1'), 'month')), sep=""))), unique = TRUE)
+
+# ## 1971 - 2000
+# idx_SM  <- make.names(c(gsub(" ","", paste("SMI",as.yearmon(seq(from=as.Date('1971-1-1'), to=as.Date('2000-12-1'), 'month')), sep=""))), unique = TRUE)
+# idx_Pre <- make.names(c(gsub(" ","", paste("P",as.yearmon(seq(from=as.Date('1971-1-1'), to=as.Date('2000-12-1'), 'month')), sep=""))), unique = TRUE)
+# idx_Tav <- make.names(c(gsub(" ","", paste("T",as.yearmon(seq(from=as.Date('1971-1-1'), to=as.Date('2000-12-1'), 'month')), sep=""))), unique = TRUE)
 
 names(List_DataWide[[1]]) <- idx_SM
 names(List_DataWide[[2]]) <- idx_Pre
@@ -242,10 +242,10 @@ names(List_DataWide[[a]]) <- chartr("Okt","Oct",names(List_DataWide[[a]]))
 #####################################
 #### Make one large Data.Frame  ####
 
-#### Compare data.frames ####
-summary(List_DataWide[[1]][500:520]) # SMI
-summary(List_DataWide[[2]][500:520]) # Pre
-summary(List_DataWide[[3]][500:520]) # Tav
+# #### Compare data.frames ####
+# summary(List_DataWide[[1]][500:520]) # SMI
+# summary(List_DataWide[[2]][500:520]) # Pre
+# summary(List_DataWide[[3]][500:520]) # Tav
 
 #### Cbind data.frames ####
 MeteoSMI_df_wide <-  cbind(List_DataWide[[1]], List_DataWide[[2]])
@@ -288,20 +288,19 @@ names(MeteoSMI_df_wide)
 # st_crs(SMI_spdf) # st_transform
 
 #########################################################
-#### Export Data for each Input Variable seperately ####
+#### Export Data for each input Variable seperately ####
 #######################################################
 write.csv2(MeteoSMI_df_wide,   paste("./data/data_proj/","Meteo_df_wide_", namelist_models[[i]],".csv", sep=""))
 
-
+print("End of loop one")
 } # Loop dauert nur 30 Sekunden, daher kann ich Daten eigentlich wieder löschen. Aber ich 
 
 remove(MeteoSMI_df_wide, Pre, SMI, Tav)
-remove(namelist_DMI,namelist_ICTP, namelist_KNMI, namelist_MPI, namelist_SMHI)
 remove(idx_Pre, idx_SM, idx_Tav)
 remove(List_DataWide)
 remove(Pre_open, SMI_open, Tav_open)
 remove(Pre_directory, SMI_directory, Tav_directory)
-remove(namelist)
+
 ######################################################################################################################################################################################
 ######################################################################################################################################################################################
 ##############################################################
@@ -356,7 +355,7 @@ for (i in 1:5){
   #### Create SF.data.frame ####
   
   # #### Load Shape with SpatialInformation for the Polygones of the Administrative Districts ####
-  # vg2500_krs <- read_sf("./data/data_proj/Input/CLC/", "vg2500_krs")
+  # vg2500_krs <- read_sf("./data/data_proj/input/CLC/", "vg2500_krs")
   # 
   # str(vg2500_krs, 2)
   # vg2500_krs$RS
@@ -368,7 +367,7 @@ for (i in 1:5){
   #### Create SF.data.frame ####
   MeteoSMI_spdf_wide  <-  bind_cols(vg2500_krs, MeteoSMI_df_wide )
   str(MeteoSMI_spdf_wide)
-  
+  names(MeteoSMI_spdf_wide)
   # #### Plot one layer of sf.data.frame ####
   # as(MeteoSMI_spdf_wide, 'Spatial')
   # spplot(as(MeteoSMI_spdf_wide, 'Spatial'),"SMJan1951")
@@ -383,18 +382,18 @@ for (i in 1:5){
   #### Preperation for Reshaping ####
   ##################################
   names(MeteoSMI_spdf_wide)
-  
+  (dim(MeteoSMI_spdf_wide)[2] - 6)
   #########################################################################################################################################
   #### Generate list of starting(year 1951) and ending points (2099) of each Meteo Month combination necessary for list_MeteoMonthYear ####
   
   ## Where is the first entry of a variable 
   StartingValue <- 7
   
-  FirstVariableEntry <- c(seq(StartingValue, StartingValue + 11,1), (seq(StartingValue,StartingValue + 11,1) + 1788), (seq(StartingValue,StartingValue + 11,1) + 2*1788))
+  FirstVariableEntry <- c(seq(StartingValue, StartingValue + 11,1), (seq(StartingValue,StartingValue + 11,1) + 1788), (seq(StartingValue,StartingValue + 11,1) + 2*1788)) # 1788
   names(MeteoSMI_spdf_wide )[FirstVariableEntry]
   
   ## Last entry
-  LastVariableEntry <- FirstVariableEntry + 148*12
+  LastVariableEntry <- FirstVariableEntry + 148*12 # normalerweise 148*12
   names(MeteoSMI_spdf_wide )[LastVariableEntry]
   
   ## Combine entrys into one list
@@ -427,7 +426,7 @@ for (i in 1:5){
   ### Loop over the 36 listMonthYearNames to melt the years into one column for each Meteo Month combination ####
   ##############################################################################################################
   ## Make container for loop #
-  MeteoMonth_df_tidy <- data.frame(1:61388) # set container
+  MeteoMonth_df_tidy <- data.frame(1:61388) # set container , NORMALLY 412*149
   MeteoMonth <- data.frame() # set container
   # str(MeteoSMI_df_wide)
   
@@ -533,3 +532,5 @@ for (i in 1:5){
 } ## close of reshape loop 
 
 rm(list=ls())
+
+

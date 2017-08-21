@@ -393,115 +393,129 @@ rm(list=ls()[! ls() %in% c("Maize_meteo", "vg2500_krs", "avgYield_comId")])
 # # # Adj. R-Squared: 0.35595, Polynome 4. Grades in P and T and SMI
 # -  Meteorologie im July verbessert die vorhersagekraft im sample sehr. 
 # '
-# #############################################################################################################################################################################
-# #############################################################################################################################################################################
-# 
-# ################################################################################################################################
-# #### Explore differences on extimation procedure which use plm, demeaned data, or LSDV - in particular for nonlinearities #####
-# ##############################################################################################################################
-# 
-# ##############################
-# #### (Time) - Demean Data ####
-# str(Maize_meteo)
-# ## Scale all the data within a comId ##
-# Maize_meteo_demean1  <- ddply(Maize_meteo,  ~ comId,  numcolwise(scale, scale=FALSE))
-# 
-# summary(Maize_meteo_demean1)#
-# str(Maize_meteo_demean1)
-# names(Maize_meteo_demean1)
-# 
-# #########################################################################
-# #### Compare the data demeaned by ddplyr with manually demeand Data ####
-# 
-# ## ddplyr
-# head(Maize_meteo_demean1,18)[5]
-# ## manually
-# # head(Maize_meteo)[8]
-# Maize_meteo[1:18,8] - mean(Maize_meteo[1:17,8]) 
-# ' Da der 18. Wert nicht mehr übereinstimmt scheint dass demeanen für die einzelnen comIds zu funktionieren.'
-# 
-# #######################################################################################################
-# #### Comprise full demeaned data.frame  also including temporal information and stepwise functions ####
-# ## Append Year ##
-# year <- Maize_meteo$year
-# Maize_meteo_demean  <- cbind(year, Maize_meteo_demean1)
-# summary(Maize_meteo_demean)
-# names(Maize_meteo_demean)
-# 
-# ## Change Order that comId is first column ##
-# Maize_meteo_demean  <- Maize_meteo_demean[,c(2,1,3:length(names(Maize_meteo_demean)))]
-# names(Maize_meteo_demean )
-# 
-# ## Append stepwise functions ##
-# names(Maize_meteo)[(length(names(Maize_meteo))-2):(length(names(Maize_meteo)))]
-# names(cbind(Maize_meteo_demean, Maize_meteo[(length(names(Maize_meteo))-2):(length(names(Maize_meteo)))]))
-# 
-# Maize_meteo_demean <- cbind(Maize_meteo_demean, Maize_meteo[(length(names(Maize_meteo))-2):(length(names(Maize_meteo)))])
-# str(Maize_meteo_demean )
-# 
-# ############################################################
-# #### Compare results of plm, demean, and lm with dummy ####
-# ##########################################################
-# 
-# #### linear ####
-# ## plm
-# plm.fit_lin <- plm(siloMaize ~ SMI_Jun6 + SMI_Aug6 + I(T_Jul)  ,
-#                data = Maize_meteo,  effect="individual", model=("within"), index = c("comId","year"))
-# summary(plm.fit_lin)
-# 
-# ## demean
-# lm.fit_demean_lin <- lm(siloMaize ~  SMI_Jun6 + SMI_Aug6 + I(T_Jul) , data = Maize_meteo_demean)
-# summary(lm.fit_demean_lin)  
-# 
-# ## LSDV 
-# lm.fit_dummy_lin <- lm(siloMaize ~ SMI_Jun6 + SMI_Aug6  + I(T_Jul) + comId, data = Maize_meteo)
-# summary(lm.fit_dummy_lin) 
-# 
-# ## Comparision of Coefficients ##
-# coefficients(lm.fit_dummy_lin)[2:14] # I(T_Jul): -0.019542 (siloMaize_logtrend); -0.02019190 log(siloMaize);  -8.423623 (silomaize);
-# coefficients(plm.fit_lin)[1:13] # I(T_Jul):  -0.0195418, (siloMaize_logtrend);-0.02019190 log(siloMaize); -8.423623 (silomaize);
-# coefficients(lm.fit_demean_lin)[2:14] # I(T_Jul): -0.020220 (siloMaize_logtrend); -0.02019190 log(siloMaize); -8.714845 (silomaize);
-# ' Die Coefficienten ändern sich kaum wenn man mit cutoff 9 statt mit cuttoff 17 arbeitet'
-# 
-# #### nonlinear ####
-# ## plm
-# plm.fit_nonlin <- plm(siloMaize ~ SMI_Jun6 + SMI_Aug6  + I(T_Jul)  + I(T_Jul^2) ,
-#                    data = Maize_meteo,  effect="individual", model=("within"), index = c("comId","year"))
-# summary(plm.fit_nonlin) # Adj.  R-sq  0.33496 (siloMaize), 0.31927 (siloMaize_logtrend)
-# 
-# ## demean
-# lm.fit_demean_nonlin <- lm(siloMaize ~  SMI_Jun6 + SMI_Aug6 + I(T_Jul)  + I(T_Jul^2) , data = Maize_meteo_demean)
-# summary(lm.fit_demean_nonlin) # Adj.  R-sq  0.3611  (siloMaize),  0.3454  (siloMaize_logtrend)
-# 
-# ## LSDV 
-# lm.fit_dummy_nonlin <- lm(siloMaize ~ SMI_Jun6 + SMI_Aug6  + I(T_Jul)  + I(T_Jul^2) + factor(comId), data = Maize_meteo)
-# summary(lm.fit_dummy_nonlin) # Adj.  R-sq  0.6801 (siloMaize),  0.6779  (siloMaize_logtrend)
-# 
-# ## Comparision of Coefficients ##
-# coefficients(lm.fit_dummy_nonlin)[2:15 ] # I(T_Jul) 0.146906158, I(T_Jul^2) -0.004449528 (siloMaize_logtrend);  
-# # I(T_Jul)55.492156  , I(T_Jul^2) -1.708612 (siloMaize)
-# coefficients(plm.fit_nonlin)[1:14]  # I(T_Jul) 0.146906158, I(T_Jul^2) -0.004449528 (siloMaize_logtrend)
-# # I(T_Jul)55.49215 , I(T_Jul^2) -1.708612 (siloMaize)
-# coefficients(lm.fit_demean_nonlin)[2:15] # I(T_Jul) -0.017895938 , I(T_Jul^2) -0.004448825(siloMaize_logtrend)
-# # I(T_Jul)-7.806 , I(T_Jul^2) -1.740 (siloMaize)
-# 
-# 
-# ' Die Coefficienten ändern sich kaum wenn man mit cutoff 9 statt mit cuttoff 17 arbeitet
-# Bei linearer Konfiguration: Für die Coefficienten bekomme ich die gleichen Werte. 
-# Das adjusted R-square unterscheidet sich aber zwischen demean und plm.
-# Dummy liefert natürlich ein größeres R2, da dort die Fixed Effects explicit mit eingehen. 
-# Bei linearen Modellen kann man also Problemlos demeanen. Des weiteren ist der SMI 
-# wohl so wie er definiert ist nicht durch demeanen betroffen, da das demeaning framework nicht für die SMIs angewendet wurde 
-# (numcolwise berücksichtige alle Faktoren nicht), 
-# die Ergebnisse bei linearen Konfigurationen aber gleich sind.
-# Bei nichtlinearitäten: lm.fit_demean liefert andere cofficienten für die Polynome als die drei anderen Modelle. 
-# D.h. durch das demeanen werden die Poylnomberechnungen entscheidend verändert.
-# The function poly does not work with demeanded data, even not with degree 1 '
-# 
-# '
-# Ich glaube, es wäre schlecht, wenn die Daten gefitted werden, ohne dass jede räumliche Einheit betrachtet werden. In so einem Fall würde es nämlich keinen Fixed Effect
-# für die Daten in einem Ort geben. Das heißt, dort würde kein demeaning stattfinden. Daher sollte ich darauf achten, dass ich stratified samples für cross-validation nehme ()
-# '
+#############################################################################################################################################################################
+#############################################################################################################################################################################
+
+################################################################################################################################
+#### Explore differences on extimation procedure which use plm, demeaned data, or LSDV - in particular for nonlinearities #####
+##############################################################################################################################
+
+
+#### Read in Maize_meteo Data ####
+Maize_meteo <- read.csv( file="./data/data_processed/Maize_meteo.csv")
+Maize_meteo$X <- NULL
+str(Maize_meteo)
+
+##############################
+#### (Time) - Demean Data ####
+str(Maize_meteo)
+## Scale all the data within a comId ##
+Maize_meteo_demean1  <- ddply(Maize_meteo,  ~ comId,  numcolwise(scale, scale=FALSE))
+
+summary(Maize_meteo_demean1)#
+str(Maize_meteo_demean1)
+names(Maize_meteo_demean1)
+
+#########################################################################
+#### Compare the data demeaned by ddplyr with manually demeand Data ####
+
+## ddplyr
+head(Maize_meteo_demean1,18)[5]
+## manually
+# head(Maize_meteo)[8]
+Maize_meteo[1:18,8] - mean(Maize_meteo[1:17,8])
+' Da der 18. Wert nicht mehr übereinstimmt scheint dass demeanen für die einzelnen comIds zu funktionieren.'
+
+#######################################################################################################
+#### Comprise full demeaned data.frame  also including temporal information and stepwise functions ####
+## Append Year ##
+year <- Maize_meteo$year
+Maize_meteo_demean  <- cbind(year, Maize_meteo_demean1)
+summary(Maize_meteo_demean)
+names(Maize_meteo_demean)
+
+## Change Order that comId is first column ##
+Maize_meteo_demean  <- Maize_meteo_demean[,c(2,1,3:length(names(Maize_meteo_demean)))]
+names(Maize_meteo_demean )
+
+## Append stepwise functions ##
+names(Maize_meteo)[(length(names(Maize_meteo))-4):(length(names(Maize_meteo))-2)]
+names(cbind(Maize_meteo_demean, Maize_meteo[(length(names(Maize_meteo))-4):(length(names(Maize_meteo))-2)]))
+
+Maize_meteo_demean <- cbind(Maize_meteo_demean, Maize_meteo[(length(names(Maize_meteo))-4):(length(names(Maize_meteo))-2)])
+str(Maize_meteo_demean )
+
+############################################################
+#### Compare results of plm, demean, and lm with dummy ####
+##########################################################
+
+#### linear ####
+## plm
+plm.fit_lin <- plm(siloMaize ~ SMI_Jun6 + SMI_Aug6 + I(T_Jul)  ,
+               data = Maize_meteo,  effect="individual", model=("within"), index = c("comId","year"))
+summary(plm.fit_lin)
+
+## demean
+lm.fit_demean_lin <- lm(siloMaize ~  SMI_Jun6 + SMI_Aug6 + I(T_Jul) , data = Maize_meteo_demean)
+summary(lm.fit_demean_lin)
+
+## LSDV
+lm.fit_dummy_lin <- lm(siloMaize ~ SMI_Jun6 + SMI_Aug6  + I(T_Jul) + comId, data = Maize_meteo)
+summary(lm.fit_dummy_lin)
+
+## Comparision of Coefficients ##
+coefficients(lm.fit_dummy_lin)[2:14] # I(T_Jul): -0.019542 (siloMaize_logtrend); -0.02019190 log(siloMaize);  -8.423623 (silomaize);
+coefficients(plm.fit_lin)[1:13] # I(T_Jul):  -0.0195418, (siloMaize_logtrend);-0.02019190 log(siloMaize); -8.423623 (silomaize);
+coefficients(lm.fit_demean_lin)[2:14] # I(T_Jul): -0.020220 (siloMaize_logtrend); -0.02019190 log(siloMaize); -8.714845 (silomaize);
+' Die Coefficienten ändern sich kaum wenn man mit cutoff 9 statt mit cuttoff 17 arbeitet'
+
+#### nonlinear ####
+str(Maize_meteo_demean)
+str(Maize_meteo)
+
+## plm
+plm.fit_nonlin <- plm(siloMaize ~ SMI_Jun6 + SMI_Aug6  + I(T_Jul)  + I(T_Jul^2) ,
+                   data = Maize_meteo,  effect="individual", model=("within"), index = c("comId","year"))
+summary(plm.fit_nonlin) # Adj.  R-sq  0.33496 (siloMaize), 0.31927 (siloMaize_logtrend)
+
+## demean 
+lm.fit_demean_nonlin <- lm(siloMaize ~  SMI_Jun6 + SMI_Aug6 + I(T_Jul)  + I(T_Jul^2) , data = Maize_meteo_demean)
+summary(lm.fit_demean_nonlin) # Adj.  R-sq  0.3611  (siloMaize),  0.3454  (siloMaize_logtrend)
+
+## demean & comId
+lm.fit_demean_nonlin_comId <- lm(siloMaize ~  SMI_Jun6 + SMI_Aug6 + I(T_Jul)  + I(T_Jul^2)  + factor(comId), data = Maize_meteo_demean)
+summary(lm.fit_demean_nonlin_comId ) # Adj.  R-sq  0.3611  (siloMaize),  0.3454  (siloMaize_logtrend)
+
+
+## LSDV
+lm.fit_dummy_nonlin <- lm(siloMaize ~ SMI_Jun6 + SMI_Aug6  + I(T_Jul)  + I(T_Jul^2) + factor(comId), data = Maize_meteo)
+summary(lm.fit_dummy_nonlin) # Adj.  R-sq  0.6801 (siloMaize),  0.6779  (siloMaize_logtrend)
+
+## Comparision of Coefficients ##
+coefficients(lm.fit_dummy_nonlin)[2:15 ] # I(T_Jul) 0.146906158, I(T_Jul^2) -0.004449528 (siloMaize_logtrend);
+# I(T_Jul)55.492156  , I(T_Jul^2) -1.708612 (siloMaize)
+coefficients(plm.fit_nonlin)[1:14]  # I(T_Jul) 0.146906158, I(T_Jul^2) -0.004449528 (siloMaize_logtrend)
+# I(T_Jul)55.49215 , I(T_Jul^2) -1.708612 (siloMaize)
+coefficients(lm.fit_demean_nonlin)[2:15] # I(T_Jul) -0.017895938 , I(T_Jul^2) -0.004448825(siloMaize_logtrend)
+# I(T_Jul)-7.806 , I(T_Jul^2) -1.740 (siloMaize)
+
+
+' Die Coefficienten ändern sich kaum wenn man mit cutoff 9 statt mit cuttoff 17 arbeitet
+Bei linearer Konfiguration: Für die Coefficienten bekomme ich die gleichen Werte.
+Das adjusted R-square unterscheidet sich aber zwischen demean und plm.
+Dummy liefert natürlich ein größeres R2, da dort die Fixed Effects explicit mit eingehen.
+Bei linearen Modellen kann man also Problemlos demeanen. Des weiteren ist der SMI
+wohl so wie er definiert ist nicht durch demeanen betroffen, da das demeaning framework nicht für die SMIs angewendet wurde
+(numcolwise berücksichtige alle Faktoren nicht),
+die Ergebnisse bei linearen Konfigurationen aber gleich sind.
+Bei nichtlinearitäten: lm.fit_demean liefert andere cofficienten für die Polynome als die drei anderen Modelle.
+D.h. durch das demeanen werden die Poylnomberechnungen entscheidend verändert.
+The function poly does not work with demeanded data, even not with degree 1 '
+
+'
+Ich glaube, es wäre schlecht, wenn die Daten gefitted werden, ohne dass jede räumliche Einheit betrachtet werden. In so einem Fall würde es nämlich keinen Fixed Effect
+für die Daten in einem Ort geben. Das heißt, dort würde kein demeaning stattfinden. Daher sollte ich darauf achten, dass ich stratified samples für cross-validation nehme ()
+'
 #############################################################################################################################################################################
 ###############################################################################################################################################################################
 # ############################
@@ -779,7 +793,7 @@ der FE der ersten Gruppe der gleich dem Intercept aus lm.
 Dieser Intercept wird -  gemeinsam mit den Koeffizienten - so gewählt, dass die Funktion für den Datenbereich ab besten fitted. Entsprechend können die Werte im 
 Intercept und den Koeffizienten sehr groß werden, obwohl die Sensitivität im Datenbereich selbt nicht so stark ausgeprägt ist. 
 
-## Conclusions ##
+## Conclusions ##0
 # Detrendenden has basically no effect - makes sense since no trend was found
 # Combined models always have a better adjusted R-square (smalles difference for log(silomaize) - keep comIds with at least nine observations))
 # plm /lsdv of adjusted R-square always larger for combined models -> more variation in combined model is explained by meteorology and smi comapred to the fixed effects

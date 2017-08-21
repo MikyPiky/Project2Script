@@ -35,7 +35,8 @@ predictData_tidy_complete_expost -> "./data/data_proj/output/",modelListMatrixNa
 
 #### Dependencies and Input ####
 ' - Maize_meteo.csv -> /Proj2/data/data_proj/output/ (BasePrediction_exploration)
-    NewValues -> /data/data_proj/MeteoMonth_df_tidy_RCM[[r]]/ (indexed for various RCMs) <- KlimaMeteo_netcdfTo_sf$Tidy.R
+
+
 '
 
 
@@ -67,6 +68,7 @@ library(grDevices)
 ##############################################################################################################################################################################
 
 ###################################################
+
 ##### Read Maize_meteo.csv  ####
 #################################################
 Maize_meteo <- read.csv( file="./data/data_processed/Maize_meteo.csv")
@@ -204,38 +206,6 @@ lm.fit_SMI_6_Jul_modelmatrix_anomaly <-
 summary(lm.fit_SMI_6_Jul_modelmatrix_anomaly) # Adjusted R-squared:    0.2841 
 
 
-####################################################
-## lm.fit with NO explicit model.matrix of comIds ##
-
-## June to August ##
-## Yield
-# drops <- c("SMI_Jul6", "siloMaizeAnomaly")
-str(Maize_meteo_short)
-lm.fit_SMI_6_Jun_Aug <- 
-  lm(siloMaize ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jun6 + SMI_Aug6 + comId  ,
-     data = Maize_meteo_short )
-summary(lm.fit_SMI_6_Jun_Aug) # Adjusted R-squared:   0.6857 
-
-## Yield - Anomaly
-lm.fit_SMI_6_Jun_Aug_anomaly <- 
-  lm(siloMaizeAnomaly ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jun6 + SMI_Aug6 + comId  ,
-     data = Maize_meteo_short)
-summary(lm.fit_SMI_6_Jun_Aug_anomaly) # Adjusted R-squared:    0.3362 
-
-## July ##
-## Yield
-lm.fit_SMI_6_Jul <- 
-  lm(siloMaize ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jul6 + comId  ,
-     data = Maize_meteo_short)
-summary(lm.fit_SMI_6_Jul) # Adjusted R-squared:   0.661 
-
-## Yield - Anomaly
-lm.fit_SMI_6_Jul_anomaly <- 
-  lm(siloMaizeAnomaly ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jul6 + comId  ,
-     data = Maize_meteo_short)
-summary(lm.fit_SMI_6_Jul_anomaly) # Adjusted R-squared:    0.2841 
-
-
 ###############################################
 #### Generate frame of comIds to merge on ####
 #############################################
@@ -257,17 +227,9 @@ modelListMatrix <- list(lm.fit_SMI_6_Jun_Aug_modelmatrix, lm.fit_SMI_6_Jul_model
 modelListMatrixAnomaly <- list(lm.fit_SMI_6_Jun_Aug_modelmatrix_anomaly, lm.fit_SMI_6_Jul_modelmatrix_anomaly )
 modelListMatrixNames <- list("lm.fit_SMI_6_Jun_Aug_modelmatrix", "lm.fit_SMI_6_Jul_modelmatrix")
 
-modelList <- list(lm.fit_SMI_6_Jun_Aug, lm.fit_SMI_6_Jul)
-modelListAnomaly <- list(lm.fit_SMI_6_Jun_Aug_anomaly, lm.fit_SMI_6_Jul_anomaly )
-modelListNames <- list("lm.fit_SMI_6_Jun_Aug", "lm.fit_SMI_6_Jul")
-
 for (s in 1:length(modelListMatrix) ){
    
   dir.create(paste("./data/data_proj/output/",modelListMatrixNames[[s]], sep="" ), showWarnings = F) # does not overwrite automatically
-  dir.create(paste("./data/data_proj/output/",modelListNames[[s]], sep="" ), showWarnings = F) # does not overwrite automatically
-  dir.create(paste("./figures/figures_exploratory/Proj/",modelListMatrixNames[[s]], sep="" ), showWarnings = F) # does not overwrite automatically
-  dir.create(paste("./figures/figures_exploratory/Proj/",modelListNames[[s]], sep="" ), showWarnings = F) # does not overwrite automatically
-  
 
   ###############################################################
   #### Loop to make predictions for all five climate models ####
@@ -305,39 +267,8 @@ for (s in 1:length(modelListMatrix) ){
     dim(NewValues)
     str(NewValues)
 
-    NewValues$comId <- as.factor(NewValues$comId)
+    NewValues$comId
     ' Achtung: NewValues und comId merge haben einen unterschiedliche Reihenfolge'
-    
-    str(NewValues)
-    
-    
-    
-    #### Check comId specific mean and median for soil moisture conditional on comIds - 1951 - 2099 ####
-    NewValues_MeanMedian_comId <-  NewValues %>%
-                        group_by(comId) %>%
-                        summarise(SMI_Jun_mean = round(mean(SMI_Jun),2), SMI_Jul_mean = round(mean(SMI_Jul),2), SMI_Aug_mean = round(mean(SMI_Aug),2) ,
-                                  SMI_Jun_median = round(median(SMI_Jun),2), SMI_Jul_median = round(median(SMI_Jul),2), SMI_Aug_median = round(median(SMI_Aug),2) )
-    # View(NewValues_MeanMedian_comId)
-
-    write.csv(NewValues_MeanMedian_comId,  paste("./data/data_proj/output/", "NewValues_MeanMedian_comId_", namelist_models[[r]],".csv", sep=""))
-
-    #### Check comId specific mean and median for soil moisture  conditional on comIds - time period 1951 to 2000 ####
-    NewValues_MeanMedian_comId_1971To2000 <-  NewValues %>% 
-      group_by(comId) %>% 
-      filter(year >= 1971 & year <= 2000) %>% 
-      summarise(SMI_Jun_mean = round(mean(SMI_Jun),2), SMI_Jul_mean = round(mean(SMI_Jul),2), SMI_Aug_mean = round(mean(SMI_Aug),2) ,
-                SMI_Jun_median = round(median(SMI_Jun),2), SMI_Jul_median = round(median(SMI_Jul),2), SMI_Aug_median = round(median(SMI_Aug),2))
-    # View(NewValues_MeanMedian_comId_1971To2000)
-    write.csv(NewValues_MeanMedian_comId_1971To2000,  paste("./data/data_proj/output/", "NewValues_MeanMedian_comId_1971To2000_", namelist_models[[r]],".csv", sep=""))
-    
-    #### Check comId specific mean and median for soil moisture  conditional on comIds - time period 1951 to 2000 ####
-    NewValues_MeanMedian_comId_1951To2000 <-  NewValues %>% 
-                        group_by(comId) %>% 
-                        filter(year >= 1951 & year <= 2000) %>% 
-                        summarise(SMI_Jun_mean = round(mean(SMI_Jun),2), SMI_Jul_mean = round(mean(SMI_Jul),2), SMI_Aug_mean = round(mean(SMI_Aug),2) ,
-                                  SMI_Jun_median = round(median(SMI_Jun),2), SMI_Jul_median = round(median(SMI_Jul),2), SMI_Aug_median = round(median(SMI_Aug),2))
-    # View(NewValues_MeanMedian_comId_1951To2000)
-    write.csv(NewValues_MeanMedian_comId_1951To2000,  paste("./data/data_proj/output/", "NewValues_MeanMedian_comId_1951To2000_", namelist_models[[r]],".csv", sep=""))
 
     ##################################################################################
     #############################################
@@ -379,13 +310,14 @@ for (s in 1:length(modelListMatrix) ){
     
     ######################################################################
     #### Extract NewValuesyear comIds in the proper order for merging ####
-    NewValuesyear_comId_order <- NewValues_merge %>% filter(year==2000) %>% select(comId)
+    NewValuesyear_comId_order <- NewValues_merge %>% filter(year==1999) %>% select(comId)
     str(NewValuesyear_comId_order )
     
     ######################################################
     #### Generare Container to store predicted values ####
     predictData <- predictData_anomaly <- predictData_anomaly_expost <- NewValuesyear_comId_order
     str(predictData)
+
 
     ###########################################
     ## Generate Factors for comIds and years ##
@@ -399,24 +331,16 @@ for (s in 1:length(modelListMatrix) ){
     dim(NewValues_merge)
     rm(modelmatrix)
     
-    ###############################################
-    #### Generate Model.Matrix including NULLS ####
-    dim(modelmatrix_Df)
-    modelmatrix_Df_NULL <-modelmatrix_Df
-    modelmatrix_Df_NULL[modelmatrix_Df_NULL == 1] <- 0
-    
-    View(modelmatrix_Df_NULL)
-    dim(modelmatrix_Df_NULL)
-    
+
     ###################################################################
     #### Use Cbind to generate Dataframe that includes modelmatrix ####
     NewValues_modelmatrix <- cbind(NewValues_merge, modelmatrix_Df)
     str(NewValues_modelmatrix)
-    
-    ########################################################################
-    #### Use Cbind to generate Dataframe that includes NULL modelmatrix ####
-    NewValues_modelmatrix_NULL <- cbind(NewValues_merge, modelmatrix_Df_NULL)
-    str(NewValues_modelmatrix_NULL)
+
+    # NewValues_modelmatrix_year <- NewValues_modelmatrix %>% filter(year==1999)
+    # View(NewValues_modelmatrix_year)
+    # 
+    # write.csv(NewValues_modelmatrix_year, file = "x")
 
     ########################
     #### Clean up names ####
@@ -425,17 +349,6 @@ for (s in 1:length(modelListMatrix) ){
     colnames <- gsub("NewValues_merge.", "", x)
     colnames
     colnames(NewValues_modelmatrix) <- colnames
-    colnames(NewValues_modelmatrix_NULL) <- colnames
-    
-    str(NewValues_modelmatrix)
-    
-    ###########################################################################################
-    #### Generate data which are demeaned by the average of the climate period 1971 - 2000 ####
-    str(NewValues_modelmatrix_NULL)
-    NewValues_modelmatrix_NULL$year <- as.numeric(NewValues_modelmatrix_NULL$year)
-    
-    NewValues_modelmatrix_NULL_demeaned <-  NewValues_modelmatrix_NULL %>% filter(year > 1971 & year < 2001) %>% summarise(SMI_Jun6_mean_ref = mean(SMI_Jun6))
-    dim(NewValues_modelmatrix_NULL_demeaned )
     
     ###################################################################################################
     #######################################################################
@@ -457,7 +370,7 @@ for (s in 1:length(modelListMatrix) ){
       NewValuesyear <- NewValues_modelmatrix %>% filter(NewValues_modelmatrix$year == listyear[[l]] )
       rownames(NewValuesyear) <- NULL
       str(NewValuesyear)
-  
+      dim(NewValuesyear)
 
       # View(NewValuesyear)
       
