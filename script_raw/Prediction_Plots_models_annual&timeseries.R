@@ -81,119 +81,121 @@ library(ggplot2)
 
 
 
-##############################################################################################################################################################################
-##############################################################################################################################################################################
-##############################################################
-#### Plot Maps of predicted data (yearly considerations) ####
-############################################################
-
-###############################
-#### Preparation for loop ####
-#############################
-
-#### Laden der Shapes mit den Polygonen der Kreise und deren räumliche Zuordnung ####
-vg2500_krs <- read_sf("./../Proj1/data/data_spatial/", "vg2500_krs")
-str(vg2500_krs, 2)
-
-## Change RS to five digits ##
-vg2500_krs$RS <- as.integer(str_sub(vg2500_krs$RS, 1,5))
-vg2500_krs$RS
-
-
-#### Create lists for the loop ####
-## Create List of models to loop trrough##
-namelist_models <- c("DMI","ICTP", "KNMI","MPI","SMHI")
-
-## List of Names used to store the figures ##
-modelListMatrixNames <- list("lm.fit_SMI_6_Jun_Aug_modelmatrix", "lm.fit_SMI_6_Jul_modelmatrix")
-
-
-## List of Names used in figures ##
-modelListYieldNames <-list("Model: combined", "Model: July")
-
-##################################################
-#### Start of loop through prediction models #####
-for (s in 1:length(modelListMatrixNames)){
-  
-  dir.create(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[s]] ,sep=""),showWarnings = FALSE)
-  
-  
-  #### Load tidy data.frame of Yield and Yield_Anomaly Predictions  ####
-  ' one large data.frame also including a marker for the model'
-  PredictData_df_tidy <- read.csv(paste("./data/data_proj/output/", modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv", sep="") )
-  str(PredictData_df_tidy) # 195190/149/5 = 262
-  levels(PredictData_df_tidy$model)
-  PredictData_df_tidy$X <- NULL
-  
-  #### Change Y_anomaly_*  to Y_anomaly ####
-  names(PredictData_df_tidy) <- c("model" ,"comId","year", "Y","Y_anomaly")
-  
-  
-  ############################################################################################################################################################
-  #### Loop through all 5 climate models to create Means and SDs of the absolute values for the climate periods (1971 - 2000, 2021 - 2050, 2070 - 2099)  ####
-  ##########################################################################################################################################################
-  for (t in 1:length(namelist_models)){
-    ##################################################################################################################
-    #### Loop to plot yield and yield anomaly of each year ####
-    ################################################################################################################
-    #### Make list of years ####
-    length(unique(PredictData_df_tidy$comId))
-    year_list <- seq(1951,2099)
-    
-    for (r in 1:length(year_list)){
-      PredictData_df_tidy_year   <-
-        PredictData_df_tidy    %>%
-        filter(year == year_list[[r]])
-      
-
-       # #### Merge with Spatial Information ####
-      PredictData_df_tidy_year_sf <- merge(vg2500_krs,   PredictData_df_tidy_year  , by.x = "RS", by.y = "comId")
-      str(PredictData_df_tidy_year_sf)
-       
-      ####################
-      #### Plot yield ####
-      summary(PredictData_df_tidy_year_sf$Y)
-      myPalette <- colorRampPalette((brewer.pal(9, "YlGn")))
-      sc <- scale_fill_gradientn("Yield", colours = myPalette(100), limits=c(250, 650))
-      
-      plot_yield_comId <-
-        ggplot(PredictData_df_tidy_year_sf) +
-        geom_sf(data = vg2500_krs, fill = "gray") +
-        geom_sf(aes(fill = Y)) + 
-        facet_wrap(~ model) +
-        ggtitle(paste(year_list[[r]])) +
-        sc +
-        theme_bw() +        theme(plot.title = element_text(hjust = 0.5))
-      
-      ggsave(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[s]],"/Annual/plot_annual_yield_", year_list[r], ".pdf", sep=""), plot = plot_yield_comId , width=10, height=8)
-      
-      ##############################
-      #### Plot yield anomalies ####
-      summary(PredictData_df_tidy_year_sf$Y_anomaly )
-      myPalette <- colorRampPalette((brewer.pal(11, "BrBG")))
-      sc <- scale_fill_gradientn("Yield Anomaly", colours = myPalette(100), limits=c(-200, 200))
-      
-      plot_yield_comId_anomaly <-
-        ggplot(PredictData_df_tidy_year_sf) +
-        geom_sf(data = vg2500_krs, fill = "gray") +
-        geom_sf(aes(fill = Y_anomaly )) +
-        facet_wrap(~ model) +
-        ggtitle(paste(year_list[[r]])) +
-        sc +
-        theme_bw() +        theme(plot.title = element_text(hjust = 0.5))
-      
-      ggsave(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[s]],"/Annual/plot_annual_yieldAnomaly_", year_list[r], ".pdf", sep=""), plot = plot_yield_comId_anomaly ,width=10, height=8)
-      
-    } ## End of loop through years
-    
-  } ## End of loop through all five climate models -> index is t
-  
-  
-} ## End of loop through models -> index is s
-
-#
-
-
+# ##############################################################################################################################################################################
+# ##############################################################################################################################################################################
+# ##############################################################
+# #### Plot Maps of predicted data (yearly considerations) ####
+# ############################################################
+# 
+# ###############################
+# #### Preparation for loop ####
+# #############################
+# 
+# #### Laden der Shapes mit den Polygonen der Kreise und deren räumliche Zuordnung ####
+# vg2500_krs <- read_sf("./../Proj1/data/data_spatial/", "vg2500_krs")
+# str(vg2500_krs, 2)
+# 
+# ## Change RS to five digits ##
+# vg2500_krs$RS <- as.integer(str_sub(vg2500_krs$RS, 1,5))
+# vg2500_krs$RS
+# 
+# 
+# #### Create lists for the loop ####
+# ## Create List of models to loop trrough##
+# namelist_models <- c("DMI","ICTP", "KNMI","MPI","SMHI")
+# 
+# ## List of Names used to store the figures ##
+# modelListMatrixNames <- list("lm.fit_SMI_6_Jun_Aug_modelmatrix", "lm.fit_SMI_6_Jul_modelmatrix")
+# 
+# 
+# ## List of Names used in figures ##
+# modelListYieldNames <-list("Model: combined", "Model: July")
+# 
+# ##################################################
+# #### Start of loop through prediction models #####
+# for (s in 1:length(modelListMatrixNames)){
+#   
+#   dir.create(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[s]] ,sep=""),showWarnings = FALSE)
+#   
+#   
+#   #### Load tidy data.frame of Yield and Yield_Anomaly Predictions  ####
+#   ' one large data.frame also including a marker for the model'
+#   PredictData_df_tidy <- read.csv(paste("./data/data_proj/output/", modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv", sep="") )
+#   str(PredictData_df_tidy) # 195190/149/5 = 262
+#   levels(PredictData_df_tidy$model)
+#   PredictData_df_tidy$X <- NULL
+#   
+#   #### Change Y_anomaly_*  to Y_anomaly ####
+#   names(PredictData_df_tidy) <- c("model" ,"comId","year", "Y","Y_anomaly")
+#   
+#   
+#   ############################################################################################################################################################
+#   #### Loop through all 5 climate models to create Means and SDs of the absolute values for the climate periods (1971 - 2000, 2021 - 2050, 2070 - 2099)  ####
+#   ##########################################################################################################################################################
+#   for (t in 1:length(namelist_models)){
+#     ##################################################################################################################
+#     #### Loop to plot yield and yield anomaly of each year ####
+#     ################################################################################################################
+#     #### Make list of years ####
+#     length(unique(PredictData_df_tidy$comId))
+#     year_list <- seq(1951,2099)
+#     
+#     for (r in 1:length(year_list)){
+#       
+#       #### Filter for year ####
+#       PredictData_df_tidy_year   <-
+#         PredictData_df_tidy    %>%
+#         filter(year == year_list[[r]])
+#       
+# 
+#        # #### Merge with Spatial Information ####
+#       PredictData_df_tidy_year_sf <- merge(vg2500_krs,   PredictData_df_tidy_year  , by.x = "RS", by.y = "comId")
+#       str(PredictData_df_tidy_year_sf)
+#        
+#       ####################
+#       #### Plot yield ####
+#       summary(PredictData_df_tidy_year_sf$Y)
+#       myPalette <- colorRampPalette((brewer.pal(9, "YlGn")))
+#       sc <- scale_fill_gradientn("Yield", colours = myPalette(100), limits=c(250, 650))
+#       
+#       plot_yield_comId <-
+#         ggplot(PredictData_df_tidy_year_sf) +
+#         geom_sf(data = vg2500_krs, fill = "gray") +
+#         geom_sf(aes(fill = Y)) + 
+#         facet_wrap(~ model) +
+#         ggtitle(paste(year_list[[r]])) +
+#         sc +
+#         theme_bw() +        theme(plot.title = element_text(hjust = 0.5))
+#       
+#       ggsave(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[s]],"/Annual/plot_annual_yield_", year_list[r], ".pdf", sep=""), plot = plot_yield_comId , width=10, height=8)
+#       
+#       ##############################
+#       #### Plot yield anomalies ####
+#       summary(PredictData_df_tidy_year_sf$Y_anomaly )
+#       myPalette <- colorRampPalette((brewer.pal(11, "BrBG")))
+#       sc <- scale_fill_gradientn("Yield Anomaly", colours = myPalette(100), limits=c(-200, 200))
+#       
+#       plot_yield_comId_anomaly <-
+#         ggplot(PredictData_df_tidy_year_sf) +
+#         geom_sf(data = vg2500_krs, fill = "gray") +
+#         geom_sf(aes(fill = Y_anomaly )) +
+#         facet_wrap(~ model) +
+#         ggtitle(paste(year_list[[r]])) +
+#         sc +
+#         theme_bw() +        theme(plot.title = element_text(hjust = 0.5))
+#       
+#       ggsave(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[s]],"/Annual/plot_annual_yieldAnomaly_", year_list[r], ".pdf", sep=""), plot = plot_yield_comId_anomaly ,width=10, height=8)
+#       
+#     } ## End of loop through years
+#     
+#   } ## End of loop through all five climate models -> index is t
+#   
+#   
+# } ## End of loop through models -> index is s
+# 
+# #
+# 
+# 
 
 
 

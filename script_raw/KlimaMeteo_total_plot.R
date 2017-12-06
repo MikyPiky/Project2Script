@@ -11,7 +11,7 @@ Here I look at plots which average over all climate models ("MPI","DMI","KNMI","
 - Combine those to one large data.frame including all climate models
 - Loop to create Means and SD of the absolute values for the climate periods (1971 - 2000, 2021 - 2050, 2070 - 2099) -> output is list of data.frames
 - Create differences in mean and sd between the reference climate period (1971 - 2000) and the projections (2021 - 2050, 2070 - 2099)
-- Export summary statistics of means, sd, and the difference in both via stargazer
+- Export summary statistics of the reference and climate periods and the difference in the climate vs. reference period via stargazer
 - Produce Plots
   Plots:
     Plots of Difference in Mean or SD, climate periods (2021-2050, 2070-2099), compared to reference period (1971-2000)
@@ -27,15 +27,6 @@ Here I look at plots which average over all climate models ("MPI","DMI","KNMI","
     - SMI in June
     - SMI in July
     - SMI in August
-
-P -> P
-
-
-    - Combined Plots
-      - TJul, PJul, SMIJun, SMIAug
-      - TJul, PJul, SMIJun, SMIAug, Yield
-      - TJul, PJul, SMIJul
-      - TJul, PJul, SMIJul, Yield
 '
 
 #### Output ####
@@ -46,7 +37,7 @@ P -> P
 '/Proj2/figures/figures_exploratory/Proj/MeteoVar/'
 
 #### Dependencies and Input ####
-'-  Meteorological Data in tidy format: MeteoMonth_df_tidy_* (* is climate model) -> /Proj2/data/data_proj/ (from KlimaMeteo_netcdfTo_sf&Tidy.R)
+'- Meteorological Data in tidy format: MeteoMonth_df_tidy_* (* is climate model) -> /Proj2/data/data_proj/ (from KlimaMeteo_netcdf_to_sf&Tidy.R)
  - vg2500_krs -> data_proj_Input/CLC 
 '
 
@@ -127,16 +118,19 @@ MeteoMonth_df_tidy_summaries_total_list <- list(MeteoMonth_df_tidy_summaries_tot
 MeteoMonth_df_tidy_summaries_total_sf_list <- list(MeteoMonth_df_tidy_summaries_total_sf_1979 = data.frame(), MeteoMonth_df_tidy_summaries_total_sf_2021= data.frame(),
                                                    MeteoMonth_df_tidy_summaries_total_sf_2070 = data.frame())
 
-
+## Generate list of start and end dates of climate periods ##
+'Those are necessary for the conditioning in filter'
+climateyears_list <- list(c(1971,2021,2070), c(2000, 2050, 2099))
 
 #### Start of loop  to create means and sd conditional on the reference period or the climate periods ####  
 for (i in 1:3){
   #### Summarize variables ####
-  MeteoMonth_df_tidy_summaries_total_list[[i]] <- MeteoMonth_df_tidy_total %>%  
+  MeteoMonth_df_tidy_summaries_total_list[[i]] <- 
+    MeteoMonth_df_tidy_total %>%  
     filter(year >=  climateyears_list[[1]][i] & year <= climateyears_list[[2]][i]) %>% 
     group_by(comId) %>%
     select_if(is.numeric) %>%
-    summarise_all(.funs = c (Mean="mean", Sd="sd"))
+    summarise_all(.funs = c(Mean = "mean", Sd= "sd"))
   
   #### Merge with Spatial Information ####
   MeteoMonth_df_tidy_summaries_total_sf_list[[i]] <- merge(vg2500_krs, MeteoMonth_df_tidy_summaries_total_list[[i]], by.x = "RS", by.y = "comId", all.x, sort=F) 

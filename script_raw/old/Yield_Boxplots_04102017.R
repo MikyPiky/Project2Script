@@ -7,7 +7,7 @@ in predictions for the two climate periode  compared to the reference period.
      Boxplot for each RCM and climate period is based on 334 observations. 
   2) Boxplot which consideres the deviations to the reference period (1971)
 <<<<<<< HEAD
-      For each RGM and climate period: # of regional units * 30 years = 262 * 30 = 10020 observations
+      For each RGM and climate period: # of regional units * 30 years = 334 * 30 = 10020 observations
 =======
       For each RGM and climate period: # of regional units * 30 years = 262 * 30 = 7860 observations
 >>>>>>> 1e4b14dbcff75af095acdd2afd4126f3410d1fb7

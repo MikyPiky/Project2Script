@@ -3,24 +3,17 @@
 ################################################################
 #### Description ####
 '
-Here I look at plots which average over all climate models ("MPI","DMI","KNMI","ICTP","SMHI")
+Here I look at plots which AVERAGE over all climate models ("MPI","DMI","KNMI","ICTP","SMHI")
 
 - Loop through different prediction models  
 - read in tidy data for each prediction model
 - Loop to create Means and SD of the absolute values for the climate periods (1971 - 2000, 2021 - 2050, 2070 - 2099) -> output is list of data.frames
 - Create differences in mean and sd between the reference climate period (1971 - 2000) and the projections (2021 - 2050, 2070 - 2099)
-- Export summary statistics of means, sd, and the difference in both via stargazer
-- Produce Plots
-Plots:
-Plots of Difference in Mean or SD, climate periods (2021-2050, 2070-2099), compared to reference period (1971-2000)
-
-
-Plot of absolute values (same for Mean and SD)  for each climate period 
-- Tav in July
-- Pre in July 
-- SMI in June
-- SMI in July
-- SMI in August
+- Export summary statistics of yield for reference (1971 - 2000) and climate periods (2021 - 2050, 2070 - 2099) 
+              and the difference in the climate vs. reference period via stargazer
+- Plots:
+    Plots of Difference in Mean or SD, climate periods (2021-2050, 2070-2099), compared to reference period (1971-2000)
+    Plot of absolute values (same for Mean and SD)  for each climate period 
 
 
 '

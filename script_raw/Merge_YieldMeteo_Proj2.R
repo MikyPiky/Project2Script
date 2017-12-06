@@ -12,6 +12,7 @@
         * Circular reforms: Saxony (2008: 35 ComIds less) and Saxony-Anhalt (2007: 24 ComIds less)
     
       - Only Kreise und Kreisfreie cities are taken into account, ie every ComID with 2 or 3 digits is not considered.
+  - Also produce state specific variables -> state and stateID 
 
 '
 #### Dependencies and Input ####
@@ -46,7 +47,6 @@
 #### Ouput ####
 '
 YieldMeteo (also needed in second Project on climate projections to train the data)
-write.csv(YieldMeteo,"../Proj1/data/data_processed/YieldMeteo.csv", row.names= FALSE )
 write.csv(YieldMeteo,"../Proj2/data/data_processed/YieldMeteo.csv", row.names= FALSE )
 
 '
@@ -60,62 +60,64 @@ library(rasterVis)
 library(maptools)
 library(plyr)
 library(ncdf4)
-# library(reshape)
+library(zoo)
+library(foreign)
+# library(maps)
+library(colorspace)
+library(lattice)
 library(stringr)
-# library(eeptools)
-library("ggplot2")
-library("foreign")
-library("plm")
-library("car")
-library("lmtest")
-library("lattice")
-library("zoo")
-library("scales")
-library("nlme")
-library("lme4")
-library("mgcv")
-# library("apsrtable")
-# library("texreg")
-library("DataCombine")
-library("reshape2")
-# library("pracma")
-
+library(DataCombine)
+library(reshape2)
+library(sf)
+library(dplyr)
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(gridExtra)
+library(cowplot)
+library(grid)
+library(stargazer)
+library(stringr)
 
 #############################################################################################################################################################################################
 #############################################################################################################################################################################################
-
+rm(list=ls())
 ########################################
 #### Load tidy table of yield Data  ####
-yieldData <- read.table("../Proj1//data/data_raw/Train/Yield2015.csv", sep=";", dec=",", quote="\"", na.strings=(c("-","/", ".")),
-                        col.names=c("year","comId","com","winterWheat","rye","winterBarley","summerBarley","oats","triticale","potatoes","sugarBeet","winterRape",
-                                    "siloMaize"),   nrows=8925, skip=7, colClasses=c("integer","factor", "factor", rep("numeric", 10)))
-# View(yieldData)
-str(yieldData)
-table(yieldData$year)
+# yieldData <- read.table("../Proj1//data/data_raw/Train/Yield2015.csv", sep=";", dec=",", quote="\"", na.strings=(c("-","/", ".")),
+#                         col.names=c("year","comId","com","winterWheat","rye","winterBarley","summerBarley","oats","triticale","potatoes","sugarBeet","winterRape",
+#                                     "siloMaize"),   nrows=8925, skip=7, colClasses=c("integer","factor", "factor", rep("numeric", 10)))
+# 
 
-table(yieldData$comId , is.na(yieldData$siloMaize))
+yieldData <- read_csv("data/data_raw/Yield2016_4.csv", 
+                       col_names=c("year","comId","com","winterWheat","rye","winterBarley","summerBarley","oats","triticale","potatoes","sugarBeet","winterRape",
+                                                                                   "siloMaize"), 
+                       skip=1, na = c("-","/", ".", "...", "0")) ## also define 0 as NA
+yieldData
 
 
+#### Drop first row - cumulated datafor Germany (DG) ####
+yieldData <- yieldData %>% filter(comId != "DG") 
+
+yieldData$comId <- as.integer(yieldData$comId)
 
 #########################################################################
 #### Load SpatialPolygonesDataframe mit meteorological Daten ab 1995 #### 
-MeteoMonth_df_tidy <- read.csv(paste("./data/data_processed/MeteoMonth_df_tidy",".csv", sep=""))
-MeteoMonth_df_tidy$X <- NULL
-str(MeteoMonth_df_tidy)
-MeteoMonth_df_tidy$comId <- as.factor(str_pad(MeteoMonth_df_tidy$comId, width=5, side="left", pad = "0"))
-
+MeteoMonth_df_tidy <- read_csv("./data/data_processed/Meteo_train_demean.csv", na = c("0")) ## also define 0 as NA, no 0 found in SMI data
+names(MeteoMonth_df_tidy)
 
 #######################################
 ## Mergen der Meteorologischen Daten ##
 #######################################
-
-levels(MeteoMonth_df_tidy$comId)
-levels(yieldData$comId)
-
-YieldMeteo <- merge(yieldData, MeteoMonth_df_tidy, by=c("comId", "year"))
+YieldMeteo <- inner_join(yieldData, MeteoMonth_df_tidy, by=c("comId", "year"))
 table(YieldMeteo$year) # 410
 table(YieldMeteo$comId)
 
+# View(YieldMeteo)
+
+#### Delete merged data.frames ####
+rm(yieldData, MeteoMonth_df_tidy)
 
 ###################################################################################################################################################################################################
 ################################################################################# Manipulation of Yield Data ######################################################################################
@@ -127,66 +129,70 @@ table(YieldMeteo$comId)
 ##########################################
 ## Here I delete all Yield with value 0, as this is not comprehensible
 ## Furthermore, the variable anomalies are to be explained when the plant is planted.
-YieldMeteo$winterWheat[YieldMeteo$winterWheat==0] <- NA
-YieldMeteo$rye[YieldMeteo$rye==0] <- NA
-YieldMeteo$winterBarley[YieldMeteo$winterBarley==0] <- NA
-YieldMeteo$oats[YieldMeteo$oats==0] <- NA
-YieldMeteo$triticale[YieldMeteo$triticale==0] <- NA
-YieldMeteo$potatoes[YieldMeteo$potatoes==0] <- NA
-YieldMeteo$sugarBeet[YieldMeteo$sugarBeet==0] <- NA
-YieldMeteo$winterRape[YieldMeteo$winterRape==0] <- NA
-YieldMeteo$siloMaize[YieldMeteo$siloMaize==0] <- NA
+# YieldMeteo$winterWheat[YieldMeteo$winterWheat==0] <- NA
+# YieldMeteo$rye[YieldMeteo$rye==0] <- NA
+# YieldMeteo$winterBarley[YieldMeteo$winterBarley==0] <- NA
+# YieldMeteo$oats[YieldMeteo$oats==0] <- NA
+# YieldMeteo$triticale[YieldMeteo$triticale==0] <- NA
+# YieldMeteo$potatoes[YieldMeteo$potatoes==0] <- NA
+# YieldMeteo$sugarBeet[YieldMeteo$sugarBeet==0] <- NA
+# YieldMeteo$winterRape[YieldMeteo$winterRape==0] <- NA
+# YieldMeteo$siloMaize[YieldMeteo$siloMaize==0] <- NA
 
 ##############################
 #### Make state variables ####
 ##############################
-## comIdState _ State IDs ##
+## stateID _ State IDs ##
 # i.e. if comId starts with 1 give it a 01 and when it starts with 1 give it a 16 
 YieldMeteo$comId
 
 x <- YieldMeteo$comId
 str_sub(x, -3, -1) <- "" ;x
 table(x)
-YieldMeteo$comIdState <- x
-
-unique(YieldMeteo$comIdState)
+YieldMeteo$stateId <- x
+YieldMeteo$state <- x # initialize state column for loop
+ 
+unique(YieldMeteo$stateId)
 
 ####################################
 ## make names for state variables ##
 names(YieldMeteo)
 
 # make list of comStateIds und Namen
-csIds_list<-list("comStateIds"=unique(YieldMeteo$comIdState), "comStateNames"= c("Schleswig-Holstein","Lower Saxony", "Bremen","NRW", "Hesse","Rhineland-Palatinate","Baden-Wurttemberg","Bavaria","Saarland","Brandenburg","Mecklenburg-Vorpommern","Saxony","Saxony-Anhalt","Thuringia" )) ; csIds_list
+csIds_list <- list("stateId"=unique(YieldMeteo$stateId), 
+                 "state"= c("Schleswig-Holstein","Lower Saxony", "Bremen","NRW", "Hesse","Rhineland-Palatinate","Baden-Wurttemberg","Bavaria","Saarland","Brandenburg","Mecklenburg-Vorpommern","Saxony","Saxony-Anhalt","Thuringia" )) ; csIds_list
 
 
 ## Loop durch die Liste um  comStateNames den entsprechende comStateIds zuzuordnen
-for (i in seq_along(csIds_list$comStateIds))
-{
-  YieldMeteo$comState[YieldMeteo$comIdState==csIds_list[[1]][i]] <- csIds_list[[2]][i]
-  
+for (i in 1:length(csIds_list$stateId)){
+  YieldMeteo$state[YieldMeteo$stateId==csIds_list[[1]][i]] <- csIds_list[[2]][i]
 }
 
+## Check, whether adding names to stateID worked
+table(YieldMeteo$state)
+table(YieldMeteo$stateId)
 
-## Check, whether adding names to comIdState worked
-# table(YieldMeteo$comState=="Lower Saxony")
-# table(YieldMeteo$comIdState=="03")
 # # looks good
 # unique(YieldMeteo$comState)
-# unique(YieldMeteo$comIdState)
-# head(YieldMeteo, 15)
-# tail(YieldMeteo, 15)
-# View(yieldData)
+# unique(YieldMeteo$stateID)
+
+# View(YieldMeteo)
 
 
 
 #########################
 #### Reorder Columns ####
 length(YieldMeteo)
-names(YieldMeteo[, c(1:3,82,83, 4:81 )])
-YieldMeteo <- YieldMeteo[, c(1:3,82,83, 4:81 )]
+names(YieldMeteo)
+names(YieldMeteo[, c(1:3,138:139, 4:137 )])
+YieldMeteo <- YieldMeteo[, c(1:3,138:139, 4:137 )]
+unique(YieldMeteo$year)
+head(YieldMeteo, 15)
+tail(YieldMeteo, 15)
 
 
 #####################################
 #### Export tidy YieldMeteo Data #### 
-write.csv(YieldMeteo,"../Proj1/data/data_processed/YieldMeteo.csv", row.names= FALSE )
-write.csv(YieldMeteo,"../Proj2/data/data_processed/YieldMeteo.csv", row.names= FALSE )
+write_csv(YieldMeteo,"../Proj2/data/data_processed/YieldMeteo.csv")
+
+rm(list=ls())

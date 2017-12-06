@@ -1,6 +1,6 @@
 #### Description ####
 '
-Make combine plots derived from plots in KlimaMeteo_model_plot.R, KlimaMeteo_total_plot.R and Base Prediction_Plots.R.
+Make combine plots derived from plots in KlimaMeteo_model_plot.R, KlimaMeteo_total_plot.R and Prediction_Plots.R.
 Each specific plot used in the combined plots needs to be created first in those scripts.  
 
 '
@@ -12,6 +12,12 @@ KlimaMeteo_model_plot.R, KlimaMeteo_total_plot.R and BasePrediction_Plots_Averag
 '
 
 #### Output ####
+'Combined Plots
+- TJul, PJul, SMIJun, SMIAug
+- TJul, PJul, SMIJun, SMIAug, Yield
+- TJul, PJul, SMIJul
+- TJul, PJul, SMIJul, Yield
+<- "./figures/figures_exploratory/Proj/MeteoVar/"'
 
 
 ################################################################################################################################################################################################
@@ -98,9 +104,11 @@ plot_mean_yield_SMI_6_Jul_ICTP_MPI_Av
 ggsave(paste("./figures/figures_exploratory/Proj/Combined/","plot_mean_yield_SMI_6_Jul_ICTP_MPI_Av",".pdf", sep=""), 
        plot = plot_mean_yield_SMI_6_Jul_ICTP_MPI_Av , width=28, height=24)
 
-###################################################################
-#### Combined Plots of the second climate period (2070 - 2099) ####
-#### Meteo, SMI, and Yield of all five RCMs                    ####
+################################################################################
+#### Combined Plots of the second climate period (2070 - 2099) for each RCM ####
+################################################################################
+
+#### Jul P, Jul T, June SMI, Jul SMi, Aug SMI  ####
 namelist_models <- c("MPI","DMI","KNMI","ICTP","SMHIRCA")
 
 plot_structure2070 <- 

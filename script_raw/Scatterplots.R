@@ -14,88 +14,62 @@ This Script serves to make varios scatterplots
 '
 ###################
 ## Load Packages ##
-# library(tidyverse)
-library(caret)   
-library(plm)
-library(boot)
-library(gtools)
-library(lme4)
-library(lmtest)
-library(car)
-library(sp)
-library(rgdal)
-library(raster)
-library(rasterVis)
-library(maptools)
-library(classInt)
-library(RColorBrewer)
-library(stargazer)
-library(ggthemes)
-
-library(sf)
-
-library(dplyr)
-library(grDevices)
-library(tidyr)
-library(readr)
-library(ggplot2)
-
+source("./script/script_raw/Packages.R")
 
 
 ###############################
 #### Load observation data ####
 #### Read in tidy Dataframe for Maize ####
-Maize_meteo <- read.csv("./data/data_processed/Maize_meteo.csv")
-Maize_meteo$X <- NULL
-str(Maize_meteo)
+Maize_meteo <- read_csv("./data/data_processed/Maize_meteo.csv")
+Maize_meteo
 
 
 #### Ony select relevant variables from observational data ####
-Maize_obs <- Maize_meteo %>% select(comId, comState, year, siloMaize, siloMaizeAnomaly)
-str(Maize_obs)
+siloMaize_obs <- Maize_meteo %>% select(comId, stateId, year, siloMaize, siloMaizeAnomaly)
+siloMaize_obs
 rm(Maize_meteo)
 
-names(Maize_obs)[[5]] <- "MaizeAnomaly_obs"
-names(Maize_obs)[[4]] <- "Maize_obs"
-str(Maize_obs)
+names(siloMaize_obs)[[5]] <- "siloMaizeAnomaly_obs"
+names(siloMaize_obs)[[4]] <- "siloMaize_obs"
+str(siloMaize_obs)
 
 #### Loop Preparation ####
-modelListMatrixNames <- list("lm.fit_SMI_6_Jun_Aug_modelmatrix", "lm.fit_SMI_6_Jul_modelmatrix")
-modelListTrainNames <- list("lm.fit_SMI_6_Jun_Aug_comId", "lm.fit_SMI_6_Jul_comId")
-
-namelist_models <- c("DMI","ICTP", "KNMI","MPI","SMHI")
+# modelListMatrixNames <- list("lm.fit_SMI_6_Jun_Aug_modelmatrix", "lm.fit_SMI_6_Jul_modelmatrix")
+# modelListNames  <- list("lm.fit_SMI_6_Jun_Aug_comId", "lm.fit_SMI_6_Jul_comId")
+#
+# namelist_RCMs <- c("DMI","ICTP", "KNMI","MPI","SMHI")
 
 
 
 
 ########################################
 #### Loop through prediction models ####
-for (r in 1:length(modelListMatrixNames))
+for (r in seq_along(modelList_climate))
   {
   
   #####################################################################################################
   #### Scatterplot of timer period 1999 - 2015 of simulated data using observed inputs of the time ####
   #####################################################################################################
-  Maize_sim_train <-  read_csv(paste("./data/data_processed/Train/", modelListTrainNames[[r]],"/Yield_predict_allYears.csv", sep=""))
-  Maize_sim_train$X1 <- NULL
-  str(Maize_sim_train)
+  siloMaize_sim_train <-  read_csv(paste("./data/data_processed/Train/", modelListNames [[r]],"/Yield_predict_allYears.csv", sep=""))
+  siloMaize_sim_train$X1 <- NULL
+  str(siloMaize_sim_train)
   
-  names(Maize_sim_train)[[3]] <- "Maize_train"
-  names(Maize_sim_train)[[4]] <- "MaizeAnomaly_train"
+  names(siloMaize_sim_train)[[3]] <- "Maize_train"
+  names(siloMaize_sim_train)[[4]] <- "MaizeAnomaly_train"
   
   ####################
   #### Merge Data ####
-  Maize_train <- merge(Maize_obs, Maize_sim_train, by = c( "comId", "year" ))
+  Maize_train <- merge(siloMaize_obs, siloMaize_sim_train, by = c( "comId", "year" ))
   str(Maize_train)
   
   ##############################
   #### Plot Absolute Values ####
   scatterplot_train <-
-    ggplot(Maize_train, aes(x = Maize_train, y = Maize_obs)) +
+    ggplot(Maize_train, aes(x = Maize_train, y = siloMaize_obs)) +
     scale_x_continuous(limits = c(100, 800)) + 
     scale_y_continuous(limits = c(100, 800)) + 
     geom_point(shape=1)  +  
-    geom_smooth(mapping = aes(x=Maize_train, y=Maize_obs),
+    geom_smooth(mapping = aes(x=Maize_train, y=siloMaize_obs),
                 method=lm,  
                 se=T,   
                 fullrange=TRUE,
@@ -104,16 +78,16 @@ for (r in 1:length(modelListMatrixNames))
     theme_bw() + 
     theme(plot.title = element_text(hjust = 0.5))
   
-  ggsave(paste("./figures/figures_exploratory/Train/", modelListTrainNames[[r]],"/Scatterplot/1999-2015.pdf", sep=""), plot = scatterplot_train, width=11, height=8)
+  ggsave(paste("./figures/figures_exploratory/Train/", modelListNames [[r]],"/Scatterplot/1999-2015.pdf", sep=""), plot = scatterplot_train, width=11, height=8)
   
   #############################
   #### Plot Anomaly Values ####
   scatterplot_train_Anomalies <-
-    ggplot(Maize_train, aes(x=MaizeAnomaly_train, y=MaizeAnomaly_obs)) +
+    ggplot(Maize_train, aes(x=MaizeAnomaly_train, y=siloMaizeAnomaly_obs)) +
     scale_x_continuous(limits = c(-300, 300)) +
     scale_y_continuous(limits = c(-300, 300)) +
     geom_point(shape=1)  +  
-    geom_smooth(mapping = aes(x=MaizeAnomaly_train, y=MaizeAnomaly_obs),
+    geom_smooth(mapping = aes(x=MaizeAnomaly_train, y=siloMaizeAnomaly_obs),
                 method=lm,  
                 se=T,   
                 fullrange=TRUE,
@@ -122,7 +96,7 @@ for (r in 1:length(modelListMatrixNames))
     theme_bw() + 
     theme(plot.title = element_text(hjust = 0.5))
   
-  ggsave(paste("./figures/figures_exploratory/Train/", modelListTrainNames[[r]],"/Scatterplot/1999-2015_model_Anomalies.pdf", sep=""), 
+  ggsave(paste("./figures/figures_exploratory/Train/", modelListNames [[r]],"/Scatterplot/1999-2015_model_Anomalies.pdf", sep=""), 
          plot =   scatterplot_train_Anomalies, width=11, height=8)
 
   ####################################################################################
@@ -131,14 +105,14 @@ for (r in 1:length(modelListMatrixNames))
   
   
   ###############################################
-  #### Summary Maize_obs and Maize_sim_train ####
-  summary(Maize_train$MaizeAnomaly_obs)
+  #### Summary siloMaize_obs and siloMaize_sim_train ####
+  summary(Maize_train$siloMaizeAnomaly_obs)
   summary(Maize_train$MaizeAnomaly_train)
   
   ##################################################
   #### Make a tidy.data. frame form Maize train ####
   str(Maize_train)
-  Maize_train_tidier <- Maize_train %>% gather(type, yield, Maize_obs:MaizeAnomaly_train)
+  Maize_train_tidier <- Maize_train %>% gather(type, yield, siloMaize_obs:MaizeAnomaly_train)
   str(Maize_train_tidier)
   Maize_train_tidy <-  Maize_train_tidier %>% separate(type, into=c("yield_type", "data_type"))
   str(Maize_train_tidy)
@@ -154,9 +128,9 @@ for (r in 1:length(modelListMatrixNames))
     ggtitle("Maize Anomaly") + 
     geom_freqpoly(bins=100)
   
-  dir.create(paste("./figures/figures_exploratory/Train/", modelListTrainNames[[r]],"/Histogram/", sep=""))
+  dir.create(paste("./figures/figures_exploratory/Train/", modelListNames [[r]],"/Histogram/", sep=""))
 
-  ggsave(paste("./figures/figures_exploratory/Train/", modelListTrainNames[[r]],"/Histogram/Hist_1999-2015_Anomalies.pdf", sep=""), 
+  ggsave(paste("./figures/figures_exploratory/Train/", modelListNames [[r]],"/Histogram/Hist_1999-2015_Anomalies.pdf", sep=""), 
          plot = hist_Anomaly, width=10, height=8)
   
   
@@ -170,25 +144,25 @@ for (r in 1:length(modelListMatrixNames))
     ggtitle("Maize Anomaly") + 
     geom_freqpoly(bins=100)
   
-  dir.create(paste("./figures/figures_exploratory/Train/", modelListTrainNames[[r]],"/Histogram/", sep=""))
+  dir.create(paste("./figures/figures_exploratory/Train/", modelListNames [[r]],"/Histogram/", sep=""))
   
-  ggsave(paste("./figures/figures_exploratory/Train/", modelListTrainNames[[r]],"/Histogram/Hist_1999-2015.pdf", sep=""), 
+  ggsave(paste("./figures/figures_exploratory/Train/", modelListNames [[r]],"/Histogram/Hist_1999-2015.pdf", sep=""), 
          plot = hist, width=10, height=8)
   
   
   ####################################################
   #### Kernel Densitiy Plot of observed anomalies ####
-  ggplot(Maize_obs, aes(MaizeAnomaly_obs  )) +
+  ggplot(siloMaize_obs, aes(siloMaizeAnomaly_obs  )) +
     geom_density()
   
   ##########################################
   #### Histogramm of observed anoamlies ####
-  ggplot(Maize_sim_train, aes(MaizeAnomaly_train )) +
+  ggplot(siloMaize_sim_train, aes(MaizeAnomaly_train )) +
     geom_histogram() 
   
   ####################################################
   #### Kernel Densitiy Plot of observed anomalies ####
-  ggplot(Maize_sim_train, aes(MaizeAnomaly_train )) +
+  ggplot(siloMaize_sim_train, aes(MaizeAnomaly_train )) +
     geom_density()
   
   
@@ -198,35 +172,35 @@ for (r in 1:length(modelListMatrixNames))
   
   ######################################################################
   #### Load simulated data derived from different prediction models ####
-  Maize_sim_all <-  read.csv(paste("./data/data_proj/output/", modelListMatrixNames[[r]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv", sep=""))
-  Maize_sim_all$X <- NULL
-  str(Maize_sim_all)
+  siloMaize_sim_all <-  read.csv(paste("./data/data_proj/output/", modelListMatrixNames[[r]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv", sep=""))
+  siloMaize_sim_all$X <- NULL
+  str(siloMaize_sim_all)
   
   
   ###################################
   #### Select relevant variables #### 
-  # names(Maize_sim_all )
-  Maize_sim <- Maize_sim_all
+  # names(siloMaize_sim_all )
+  siloMaize_sim <- siloMaize_sim_all
   # %>% 
   #   select(comId, year, Y,Y_anomaly, model)
-  # str(Maize_sim)
-  # str(Maize_sim_all)
+  # str(siloMaize_sim)
+  # str(siloMaize_sim_all)
   # 
-  names(Maize_sim)[[4]] <- "Maize_sim"
-  names(Maize_sim)[[5]] <- "MaizeAnomaly_sim"
+  names(siloMaize_sim)[[4]] <- "siloMaize_sim"
+  names(siloMaize_sim)[[5]] <- "MaizeAnomaly_sim"
   
-  #### Merge Maize_sim and Maize_obs - natural / inner join: only years 1999 - 2015 are maintained #####
-  Maize_1999_2015_RCMs <- merge(Maize_sim, Maize_obs, by=c("comId", "year"))
+  #### Merge siloMaize_sim and siloMaize_obs - natural / inner join: only years 1999 - 2015 are maintained #####
+  Maize_1999_2015_RCMs <- merge(siloMaize_sim, siloMaize_obs, by=c("comId", "year"))
   str(Maize_1999_2015_RCMs)
   
   ##############################
   #### Plot Absolute Values ####
   scatterplot_1999_2015_RCMs <-
-    ggplot(Maize_1999_2015_RCMs, aes(x=Maize_sim, y=Maize_obs, color = model)) +
+    ggplot(Maize_1999_2015_RCMs, aes(x=siloMaize_sim, y=siloMaize_obs, color = model)) +
     scale_x_continuous(limits = c(100, 800)) + 
     scale_y_continuous(limits = c(100, 800)) + 
     geom_point(shape=1)  +  
-    geom_smooth(mapping = aes(x=Maize_sim, y=Maize_obs),
+    geom_smooth(mapping = aes(x=siloMaize_sim, y=siloMaize_obs),
                 method=lm,  
                 se=T,   
                 fullrange=TRUE,
@@ -241,11 +215,11 @@ for (r in 1:length(modelListMatrixNames))
   #############################
   #### Plot Anomaly Values ####
   scatterplot_1999_2015_RCMs_Anomalies <-
-    ggplot(Maize_1999_2015_RCMs, aes(x=MaizeAnomaly_sim, y=MaizeAnomaly_obs, color = model)) +
+    ggplot(Maize_1999_2015_RCMs, aes(x=MaizeAnomaly_sim, y=siloMaizeAnomaly_obs, color = model)) +
     # scale_x_continuous(limits = c(100, 800)) + 
     # scale_y_continuous(limits = c(100, 800)) + 
     geom_point(shape=1)  +  
-    geom_smooth(mapping = aes(x=MaizeAnomaly_sim, y=MaizeAnomaly_obs),
+    geom_smooth(mapping = aes(x=MaizeAnomaly_sim, y=siloMaizeAnomaly_obs),
                 method=lm,  
                 se=T,   
                 fullrange=TRUE,
@@ -259,64 +233,64 @@ for (r in 1:length(modelListMatrixNames))
   
   #########################################################################################  
   #### Loop through RCMs to produce data.frame of absolute values ordered accordingly #####
-  for (i in 1:length(namelist_models)){
+  for (i in 1:length(namelist_RCMs)){
     
     ###################################################################
     #### Scatterplot of time period 1999 - 2015 - colors by comIds ####
     
     #######################################################
     #### Filter for RCMS and select relevant variables #### 
-    Maize_sim <- Maize_sim_all %>% 
-      filter(model == namelist_models[[i]]) %>%
+    siloMaize_sim <- siloMaize_sim_all %>% 
+      filter(model == namelist_RCMs[[i]]) %>%
       select(comId, year, Y, Y_anomaly)
     
-    str(Maize_sim)
+    str(siloMaize_sim)
     
-    names(Maize_sim)[[3]] <- "Maize_sim"
-    names(Maize_sim)[[4]] <- "MaizeAnomaly_sim"
+    names(siloMaize_sim)[[3]] <- "siloMaize_sim"
+    names(siloMaize_sim)[[4]] <- "MaizeAnomaly_sim"
     
-    #### Merge Maize_sim and Maize_obs - natural / inner join: only years 1999 - 2015 are maintained #####
-    Maize_1999_2015 <- merge(Maize_sim, Maize_obs, by=c("comId", "year"))
+    #### Merge siloMaize_sim and siloMaize_obs - natural / inner join: only years 1999 - 2015 are maintained #####
+    Maize_1999_2015 <- merge(siloMaize_sim, siloMaize_obs, by=c("comId", "year"))
     str(Maize_1999_2015)
     
     ##############################################################
     #### Plot of absolute values conditional on the comStates ####
     scatterplot_1999_2015 <-
-      ggplot(Maize_1999_2015, aes(x=Maize_sim, y=Maize_obs, color = comState)) +
+      ggplot(Maize_1999_2015, aes(x=siloMaize_sim, y=siloMaize_obs, color = comState)) +
       scale_x_continuous(limits = c(100, 800)) + 
       scale_y_continuous(limits = c(100, 800)) + 
       geom_point(shape=1)  +  
-      geom_smooth(mapping = aes(x=Maize_sim, y=Maize_obs),
+      geom_smooth(mapping = aes(x=siloMaize_sim, y=siloMaize_obs),
                   method=lm,  
                   se=T,   
                   fullrange=TRUE,
                   inherit.aes = F) +
       geom_abline(slope = 90, intercept = 100, colour="red") +
-      ggtitle(paste("Period 1999 to 2015 - ", namelist_models[[i]])) +
+      ggtitle(paste("Period 1999 to 2015 - ", namelist_RCMs[[i]])) +
       theme_bw() + 
       theme(plot.title = element_text(hjust = 0.5))
     
-    ggsave(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[r]],"/Scatterplot/1999-2015_state_", namelist_models[[i]],".pdf", sep=""), 
+    ggsave(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[r]],"/Scatterplot/1999-2015_state_", namelist_RCMs[[i]],".pdf", sep=""), 
            plot = scatterplot_1999_2015, width=11, height=8)
     
     #############################################################
     #### Plot of anomaly values conditional on the comStates ####
     scatterplot_1999_2015_Anomalies <-
-      ggplot(Maize_1999_2015, aes(x=MaizeAnomaly_sim, y=MaizeAnomaly_obs, color = comState)) +
+      ggplot(Maize_1999_2015, aes(x=MaizeAnomaly_sim, y=siloMaizeAnomaly_obs, color = comState)) +
       scale_x_continuous(limits = c(-300, 300)) +
       scale_y_continuous(limits = c(-300, 300)) +
       geom_point(shape=1)  +  
-      geom_smooth(mapping = aes(x=MaizeAnomaly_sim, y=MaizeAnomaly_obs),
+      geom_smooth(mapping = aes(x=MaizeAnomaly_sim, y=siloMaizeAnomaly_obs),
                   method=lm,
                   # se=T,
                   fullrange=TRUE,
                   inherit.aes = F) +
       # geom_abline(slope = 90, intercept = 100, colour="red") +
-      ggtitle(paste("Period 1999 to 2015 - ", namelist_models[[i]], "Anomaly")) +
+      ggtitle(paste("Period 1999 to 2015 - ", namelist_RCMs[[i]], "Anomaly")) +
       theme_bw() + 
       theme(plot.title = element_text(hjust = 0.5))
     
-    ggsave(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[r]],"/Scatterplot/1999-2015_state_", namelist_models[[i]],"_Anomalies.pdf", sep=""), 
+    ggsave(paste("./figures/figures_exploratory/Proj/", modelListMatrixNames[[r]],"/Scatterplot/1999-2015_state_", namelist_RCMs[[i]],"_Anomalies.pdf", sep=""), 
            plot = scatterplot_1999_2015_Anomalies, width=11, height=8)
     
     
@@ -349,20 +323,20 @@ for (r in 1:length(modelListMatrixNames))
   
     ###########################  
     #### Loop through RCMS ####
-    for (i in 1:length(namelist_models))
+    for (i in 1:length(namelist_RCMs))
     {
-    str(Maize_sim_all)  
+    str(siloMaize_sim_all)  
     
     ##################################################################################  
     ##### Extract data of the a subset of the time period 1971 - 2000  of one RCM ####
-    Maize_sim <- Maize_sim_all %>% 
-      filter(model == namelist_models[[i]]) %>% # filte for RCM
+    siloMaize_sim <- siloMaize_sim_all %>% 
+      filter(model == namelist_RCMs[[i]]) %>% # filte for RCM
       filter(year >= period_list[[1]][n] & year <= period_list[[2]][n])    %>% # set subset of time period  
       select(comId, Y, Y_anomaly)
     
-    names(Maize_sim)[[2]] <- "Maize_sim"
-    names(Maize_sim)[[3]] <- "MaizeAnomaly_sim"
-    str(Maize_sim)
+    names(siloMaize_sim)[[2]] <- "siloMaize_sim"
+    names(siloMaize_sim)[[3]] <- "MaizeAnomaly_sim"
+    str(siloMaize_sim)
     
     ######################################################
     #### Merge with comIds derived from observations ####
@@ -378,48 +352,48 @@ for (r in 1:length(modelListMatrixNames))
     
     ########################################################################
     #### Combine simulated data and year from observed data for merging ####
-    Maize_sim_merge <- cbind(Maize_sim, year)
-    str(Maize_sim_merge)
-    # names(Maize_sim_merge) <- c("comId", "year")
+    siloMaize_sim_merge <- cbind(siloMaize_sim, year)
+    str(siloMaize_sim_merge)
+    # names(siloMaize_sim_merge) <- c("comId", "year")
     
     #########################################################################################
-    #### Merge Maize_obs with Maize_sim_merge to get the same comIds as in observed data ####
-    str(Maize_obs)
-    str(Maize_sim)
-    str(Maize_sim_merge)
+    #### Merge siloMaize_obs with siloMaize_sim_merge to get the same comIds as in observed data ####
+    str(siloMaize_obs)
+    str(siloMaize_sim)
+    str(siloMaize_sim_merge)
     
-    Maize_obs_merge <- merge(Maize_obs, Maize_sim_merge,  by=c("comId", "year"))
-    str(Maize_obs_merge)
+    siloMaize_obs_merge <- merge(siloMaize_obs, siloMaize_sim_merge,  by=c("comId", "year"))
+    str(siloMaize_obs_merge)
     
-    # View(Maize_obs_merge)
+    # View(siloMaize_obs_merge)
     
     #### Drop rows with NAs ####
-    Maize_merge <- na.omit(Maize_obs_merge)
+    Maize_merge <- na.omit(siloMaize_obs_merge)
     
     ###################################
     #### Sort absolute yield data ####
     #################################
     
     ############################
-    #### Sort Maize_sim ####
-    Maize_sim_sorted  <-   Maize_merge[order(Maize_merge$Maize_sim), ]
-    Maize_sim_sorted$Maize_obs <-Maize_sim_sorted$MaizeAnomaly_obs <- Maize_sim_sorted$MaizeAnomaly_sim <-  NULL
-    str(  Maize_sim_sorted )
+    #### Sort siloMaize_sim ####
+    siloMaize_sim_sorted  <-   Maize_merge[order(Maize_merge$siloMaize_sim), ]
+    siloMaize_sim_sorted$siloMaize_obs <-siloMaize_sim_sorted$siloMaizeAnomaly_obs <- siloMaize_sim_sorted$MaizeAnomaly_sim <-  NULL
+    str(  siloMaize_sim_sorted )
     
     ##############################
-    #### Sort Maize_obs_merge ####
-    Maize_obs_sorted  <-   Maize_merge[order(Maize_merge$Maize_obs), ]
-    Maize_obs_sorted$Maize_sim <- Maize_obs_sorted$MaizeAnomaly_sim <- Maize_obs_sorted$MaizeAnomaly_obs <-  NULL
-    str(Maize_obs_sorted)
+    #### Sort siloMaize_obs_merge ####
+    siloMaize_obs_sorted  <-   Maize_merge[order(Maize_merge$siloMaize_obs), ]
+    siloMaize_obs_sorted$siloMaize_sim <- siloMaize_obs_sorted$MaizeAnomaly_sim <- siloMaize_obs_sorted$siloMaizeAnomaly_obs <-  NULL
+    str(siloMaize_obs_sorted)
     
     #####################################################
-    #### Cbind Maize_obs_sorted and Maize_sim_sorted ####
-    Maize_scatter <- merge( Maize_obs_sorted, Maize_sim_sorted, by=c("comId", "year", "comState"))
+    #### Cbind siloMaize_obs_sorted and siloMaize_sim_sorted ####
+    Maize_scatter <- merge( siloMaize_obs_sorted, siloMaize_sim_sorted, by=c("comId", "year", "comState"))
     str(Maize_scatter)
     
     ######################
     #### Append model ####
-    Maize_scatter$model <- factor(rep(namelist_models[[i]], dim(  Maize_scatter )[1] ))
+    Maize_scatter$model <- factor(rep(namelist_RCMs[[i]], dim(  Maize_scatter )[1] ))
     
     Maize_scatter_long <- rbind(Maize_scatter_long, Maize_scatter)
     
@@ -429,25 +403,25 @@ for (r in 1:length(modelListMatrixNames))
     ################################
     
     ############################
-    #### Sort Maize_sim ####
-    Maize_sim_sorted_anomaly  <-   Maize_merge[order(Maize_merge$MaizeAnomaly_sim), ]
-    Maize_sim_sorted_anomaly$Maize_obs <-Maize_sim_sorted_anomaly$MaizeAnomaly_obs <- Maize_sim_sorted_anomaly$Maize_sim <-  NULL
-    str(  Maize_sim_sorted_anomaly )
+    #### Sort siloMaize_sim ####
+    siloMaize_sim_sorted_anomaly  <-   Maize_merge[order(Maize_merge$MaizeAnomaly_sim), ]
+    siloMaize_sim_sorted_anomaly$siloMaize_obs <-siloMaize_sim_sorted_anomaly$siloMaizeAnomaly_obs <- siloMaize_sim_sorted_anomaly$siloMaize_sim <-  NULL
+    str(  siloMaize_sim_sorted_anomaly )
     
     ##############################
-    #### Sort Maize_obs_merge ####
-    Maize_obs_sorted_anomaly  <-   Maize_merge[order(Maize_merge$MaizeAnomaly_obs), ]
-    Maize_obs_sorted_anomaly$Maize_sim <- Maize_obs_sorted_anomaly$MaizeAnomaly_sim <- Maize_obs_sorted_anomaly$Maize_obs <-  NULL
-    str(Maize_obs_sorted_anomaly)
+    #### Sort siloMaize_obs_merge ####
+    siloMaize_obs_sorted_anomaly  <-   Maize_merge[order(Maize_merge$siloMaizeAnomaly_obs), ]
+    siloMaize_obs_sorted_anomaly$siloMaize_sim <- siloMaize_obs_sorted_anomaly$MaizeAnomaly_sim <- siloMaize_obs_sorted_anomaly$siloMaize_obs <-  NULL
+    str(siloMaize_obs_sorted_anomaly)
     
     #####################################################
-    #### Cbind Maize_obs_sorted and Maize_sim_sorted ####
-    Maize_scatter_anomaly <- merge( Maize_obs_sorted_anomaly, Maize_sim_sorted_anomaly, by=c("comId", "year", "comState"))
+    #### Cbind siloMaize_obs_sorted and siloMaize_sim_sorted ####
+    Maize_scatter_anomaly <- merge( siloMaize_obs_sorted_anomaly, siloMaize_sim_sorted_anomaly, by=c("comId", "year", "comState"))
     str(Maize_scatter)
     
     ######################
     #### Append model ####
-    Maize_scatter_anomaly$model <- factor(rep(namelist_models[[i]], dim(  Maize_scatter_anomaly )[1] ))
+    Maize_scatter_anomaly$model <- factor(rep(namelist_RCMs[[i]], dim(  Maize_scatter_anomaly )[1] ))
     
     Maize_scatter_long_anomaly <- rbind(Maize_scatter_long_anomaly, Maize_scatter_anomaly)
     
@@ -464,11 +438,11 @@ for (r in 1:length(modelListMatrixNames))
   #### Plot Scatterplot of Absolute Values ####
   ############################################
   scatterplot_RCMs <-
-    ggplot( Maize_scatter_long, aes(x=Maize_sim, y=Maize_obs, color = model)) +
+    ggplot( Maize_scatter_long, aes(x=siloMaize_sim, y=siloMaize_obs, color = model)) +
     scale_x_continuous(limits = c(100, 800)) + 
     scale_y_continuous(limits = c(100, 800)) + 
     geom_point(shape=1)  +  
-    # geom_smooth(mapping = aes(x=Maize_sim, y=Maize_obs),
+    # geom_smooth(mapping = aes(x=siloMaize_sim, y=siloMaize_obs),
     #  method=lm,
     #  se=T,
     #  fullrange=TRUE,
@@ -485,11 +459,11 @@ for (r in 1:length(modelListMatrixNames))
   #### Plot Scatterplot of Anomaly Values ####
   ###########################################
   scatterplot_RCMs_anomaly <-
-    ggplot( Maize_scatter_long_anomaly, aes(x=MaizeAnomaly_sim, y=MaizeAnomaly_obs, color = model)) +
+    ggplot( Maize_scatter_long_anomaly, aes(x=MaizeAnomaly_sim, y=siloMaizeAnomaly_obs, color = model)) +
     scale_x_continuous(limits = c(-300, 300)) +
     scale_y_continuous(limits = c(-300, 300)) +
     geom_point(shape=1)  +  
-    # geom_smooth(mapping = aes(x=Maize_sim, y=Maize_obs),
+    # geom_smooth(mapping = aes(x=siloMaize_sim, y=siloMaize_obs),
     #  method=lm,
     #  se=T,
     #  fullrange=TRUE,

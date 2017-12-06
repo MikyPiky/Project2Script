@@ -8,14 +8,14 @@ to avoid any bias induced by the diverging mean in the climate models from the m
 ## Input ##
 
 '
--  Climate_*.csv <- from KlimaMeteo_netcdfTo_sf$Tidy (reshaped climate data from widy to tidy)
--  YieldMeteo.csv <- tidy data from the first project to with the period 1999 - 2015 representing the training period 
+- "MeteoMonth_df_tidy_*.csv <- from KlimaMeteo_netcdf_to_sf&Tidy (reshaped climate data from wide to tidy)
+-  YieldMeteo.csv <- not preprocessed tidy data from the first project to with the period 1999 - 2015 representing the training period 
 
 '
 
 ## Output ##
 
-' MeteoMeonth_df_tidy_demean19992015_*.csv'
+' MeteoMeonth_df_tidy_normalizedRef_*.csv -> ./data/data_proj/ '
 
 #### Packages ####
 library(sp)
@@ -51,7 +51,7 @@ namelist_models <- c("DMI","ICTP", "KNMI","MPI","SMHI")
 
 ############################
 #### Load training data ####
-YieldMeteo_train <- read_csv("./data/data_processed/YieldMeteo.csv")
+YieldMeteo_train <- read.csv("./data/data_processed/YieldMeteo.csv")
 YieldMeteo_train$X1 <- NULL
 str(YieldMeteo_train)
 
@@ -72,23 +72,31 @@ names(Train)
 
 #####################################
 #### Generate mean of these data ####
-Train_mean <-  Train %>% group_by(comId) %>% summarise_all(funs(mean))
-View(Train_mean)
+Train_mean <-  Train %>% group_by(comId) %>% summarise_all(funs(mean)) %>% data.frame()
+# View(Train_mean)
+str(Train_mean)
 
 #############################################################
 #### Replicate data.frame 149 to match with climate data ####
-Train_mean <- as.data.frame(sapply(Train_mean, rep.int, times=149))
+Train_mean_replicate <- coredata(Train_mean)[rep(seq(nrow(Train_mean)),149),]
+str(Train_mean_replicate)
+
 
 #### Generate year column ####
 x <- as.data.frame(sapply((1951:2099), rep, times=410))
 y <-gather(x)
-Train_mean$year <- y[,2]
+summary(y)
+Train_mean_replicate$year <- y[,2]
+str(Train_mean_replicate)
 
 #### Order Columns ####
-Train_mean <- Train_mean[, c(1,26,2:25)]
+Train_mean <- Train_mean_replicate[, c(1,26,2:25)]
+str(Train_mean)
+
+Train_mean$comId <- as.integer(Train_mean$comId)
 
 View(Train_mean)
-str(Train_mean)
+# str(Train_mean)
 
 #####################################
 #### Loop through climate models ####
@@ -98,10 +106,11 @@ for (i in 1:length(namelist_models)){
   #### Load data ####
   ##################
   Climate <- read_csv(paste("./data/data_proj/","MeteoMonth_df_tidy_", namelist_models[[i]],".csv", sep=""))
-  Climate$X1.12360 <- NULL
+  Climate$X1 <- NULL
   str(Climate)  
   # View(Climate)
   
+  ## Filter for comId not represented for in training data ####
   Climate_filter  <- Climate %>% filter(comId != c(2000,11000))
   View(Climate_filter)
   
@@ -115,13 +124,14 @@ for (i in 1:length(namelist_models)){
                                                          # "T_Aug_lag", "T_Sep_lag", "T_Oct_lag", "T_Nov_lag", "T_Dec_lag", "P_Aug_lag", "P_Sep_lag", "P_Oct_lag", "P_Nov_lag", "P_Dec_lag" )
   
   str(Climate_select)
-  View(Climate_select)
+  # View(Climate_select)
   
+  #############################################
   #### Merge Climate_select and Train_mean ####
   ClimateTrain_merge <- merge (Climate_select, Train_mean, by=c("comId", "year"), suffix=c(".climate",".train_mean"))
   str(ClimateTrain_merge)
   
-  View(ClimateTrain_merge)
+  # View(ClimateTrain_merge)
   ClimateTrain_merge$comId <- as.factor(ClimateTrain_merge$comId)
   levels(ClimateTrain_merge$comId)
   
@@ -133,7 +143,7 @@ for (i in 1:length(namelist_models)){
   Climate_mean$year <- Climate_select$year
   str(Climate_mean)
   
-  View(Climate_mean)
+  # View(Climate_mean)
   
   ' Da die Rheinfolge immmer nocht nicht stimmt muss ich von hier an nochmals weiterarbeiten'
   
@@ -164,9 +174,12 @@ for (i in 1:length(namelist_models)){
   str(Climate_newMean)
   View(Climate_newMean)
   
+  
   ##############################
   #### Validate new results ####
-  '1001 1951 P_Jan: Climate 120.76562 ; Climate Mean = 111.7454 ; Train_Mean= 86.30207'
+  '1001 1951 P_Jan: Climate 120.76562 ; Climate Mean = 111.7454 ; Train_Mean= 86.30207
+  climate_newMean: 95.322310'
+  
   120.86562 - 111.7454 + 86.30207 
 
   ############################################

@@ -1,13 +1,13 @@
-##################################################################
-#### Plots of Crop Yield (SM) predicted in BasePrediction.R  ####
-################################################################
+########################################################################
+#### Plots of Crop Yield (SM) predicted in Prediction_projection.R  ####
+########################################################################
 
 #### Description ####
 '
-Here I look at plots of yield of different prediction models
+Here I look at plots of yield of different prediction models and RCMs
 - Preparation for loop 
 - Loop through prediction models
-  - Read in tidy data of prediction employed in BasePrediction.R
+  - Read in preprocesse tidy data
   - Loop through all 5 climate models to create Means and SDs of the absolute values for the climate periods (1971 - 2000, 2021 - 2050, 2070 - 2099) 
     - Loop to generate data.frame with Means and SDs of Y and Y_anomaly for the three different climate zones
     - Create differences in between the reference climate period (1971 - 2000) and the projections (2021 - 2050, 2070 - 2099) 
@@ -21,14 +21,11 @@ Here I look at plots of yield of different prediction models
 - Combine those to one large data.frame including all climate models
 - Loop to create Means and SD of the absolute values for the climate periods (1971 - 2000, 2021 - 2050, 2070 - 2099) -> output is list of data.frames
 - Create differences in mean and sd between the reference climate period (1971 - 2000) and the projections (2021 - 2050, 2070 - 2099)
-- Export summary statistics of means, sd, and the difference in both via stargazer
-- Produce Plots
-Plots:
-Plots of Difference in Mean or SD, climate periods (2021-2050, 2070-2099), compared to reference period (1971-2000)
-
-
-Plot of absolute values (same for Mean and SD)  for each climate period 
-
+- Export summary statistics of yield for reference (1971 - 2000) and climate periods (2021 - 2050, 2070 - 2099) 
+              and the difference in the climate vs. reference period via stargazer
+- Plots:
+    Plots of Difference in Mean or SD, climate periods (2021-2050, 2070-2099), compared to reference period (1971-2000)
+    Plot of absolute values (same for Mean and SD)  for each climate period 
 '
 
 
@@ -37,8 +34,8 @@ Plot of absolute values (same for Mean and SD)  for each climate period
 '
 Spatial Information: Shapefile of comdIDs ("vg2500_krs")_
   - vg2500_krs -> data_proj_Input/CLC 
-BasePrediction.R: tidy.data.frames of yield and yield anomaly predictions based on different estimation models:
-  - "./data/data_proj/output/",modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy.csv"
+Prediction_projections.R: tidy.data.frames of yield and yield anomaly predictions based on different estimation models:
+  - "./data/data_proj/output/",modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv"
 
 '
 
@@ -150,7 +147,7 @@ for (s in 1:length(modelListMatrixNames)){
 
   #### Load tidy data.frame of Yield and Yield_Anomaly Predictions  ####
   ' one large data.frame also including a marker for the model'
-  PredictData_df_tidy <- read.csv(paste("./data/data_proj/output/", modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy.csv", sep="") )
+  PredictData_df_tidy <- read.csv(paste("./data/data_proj/output/", modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv", sep="") )
   str(PredictData_df_tidy) # 195190/149/5 = 262
   
   PredictData_df_tidy$X <- NULL
@@ -503,7 +500,7 @@ for (s in 1:length(modelListMatrixNames)){
   
   #### Load tidy data.frame of Yield and Yield_Anomaly Predictions  ####
   ' one large data.frame also including a marker for the model'
-  PredictData_df_tidy <- read.csv(paste("./data/data_proj/output/", modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy.csv", sep="") )
+  PredictData_df_tidy <- read.csv(paste("./data/data_proj/output/", modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv", sep="") )
   str(PredictData_df_tidy) # 195190/149/5 = 262
   
   PredictData_df_tidy$X <- NULL
@@ -788,163 +785,3 @@ for (s in 1:length(modelListMatrixNames)){
 
 ##############################################################################################################################################################################
 ##############################################################################################################################################################################
-
-# 
-# #### Read in Predicted Data ####
-# 
-# predictData <- read.csv("./data/data_processed/predictData_JunSMI6JulPoly3TavPreAugSMI6_biasCorrected.csv")
-# predictData$X  <- NULL
-# str(predictData) # 262 obs
-# 
-# #### Read in Spatial Data Frame with Spatial Reference from shape file ####
-# vg2500_krs <- readOGR("/Storage/ownCloud/Home/Klimabuero/Proj1/data//data_raw/4_michael/adminitrative_borders_Ger/", "vg2500_krs")
-# str(vg2500_krs,2)
-# vg2500_krs@data$RS
-# 
-# names(vg2500_krs) <- c("USE"   ,     "comId"    ,     "GEN"    ,    "SHAPE_LENG", "SHAPE_AREA")
-# names(vg2500_krs)
-# 
-# vg2500_krs@data$comId <- as.factor(as.numeric(str_sub(vg2500_krs@data$comId,1,5)))
-# 
-# ## Make data.frame with comIds only to merge ##
-# vg2500_krs_merge <- as.data.frame(vg2500_krs@data$comId)
-# vg2500_krs_merge
-# 
-# str(vg2500_krs_merge)
-# names(vg2500_krs_merge) <- "comId"
-# 
-# 
-# #### Change order of vg2500_krs_order ####
-# str(vg2500_krs,2)
-# 
-# vg2500_krsordered <- vg2500_krs[order(vg2500_krs$comId),]
-# rownames(vg2500_krsordered)
-# 
-# vg2500_krsordered$comId
-# 
-# rownames(vg2500_krsordered@data) <- 0:411
-# 
-# 
-# ### Merge comId Vector of vg2500_krs  (vg2500_krs_merge) and PredictData_train to get same number of rows (412) ####
-# predictData_comId <- merge(vg2500_krs_merge, predictData, by="comId", all.x=T)
-# predictData_comId$comId
-# 
-# predictData_comId[1:20,1:10]
-# 
-# #### Make SpatialDataFrame for maps ####
-# rownames(predictData_comId) <- 0:411
-# 
-# 
-# predictData_comId_sp <- NULL
-# predictData_comId$comId <- NULL
-# predictData_comId_sp <- spCbind(vg2500_krsordered, predictData_comId)
-# names(predictData_comId_sp)
-# 
-# 
-# #### Modify trellis theme for plotting ####
-# my.theme = trellis.par.get()
-# names(my.theme)
-# my.theme$panel.background
-# 
-# trellis.par.set("background", list(col = "white"))
-# trellis.par.set("panel.background", list(col = "white"))
-# trellis.par.set("strip.background", list(col = "white"))
-# trellis.par.set("fontsize", list(text=15, points=10))
-# 
-# my.theme$strip.background
-# my.theme$axis.line
-# my.theme$strip.border
-# # my.theme$strip.border$col <- c("#000000", "#000000","#000000", "#000000", "#000000", "#000000","#000000")
-# 
-# show.settings()
-# 
-# 
-# #### Set color scheme for plots ####
-# at=(seq(-0.4, 0.4, 0.05))
-# length(at)
-# 
-# cs1 <- colorRampPalette(c('#6d3f07','#bf812d','#dfc27d','#f6e8c3','#c7eae5','#35978f','#003c30','#002c3b'))(17)
-# 
-# #########################################################################
-# #### Loop over all models and years to produce maps of predictions ####
-# ######################################################################
-# namelist2 <- c("DMI","ICTP","KNMI","MPI","SMHIRCA")
-# listyear <- seq (1999, 2099)
-# 
-# # i = 1; j = 1
-# 
-# zcol<- NULL
-# 
-# for(j in 1:101){
-#   for (i in 1:5){
-#     zcol <- c(zcol,paste(namelist2[[i]], listyear[[j]], sep=""))}
-#   zcol
-#   plot <- spplot(predictData_comId_sp, zcol, at=at, col.regions= cs1)
-#   
-#   pdf(paste("./figures/figures_proj/JunSMI6JulPol3PreTavAugSMI6_biasCorrected/", listyear[[j]],".pdf", sep=""))
-#   print(plot )
-#   dev.off()
-#   
-#   zcol<-NULL
-# }
-# 
-# 
-# 
-# 
-# ###########################################
-# #### Make time series plots for model ####
-# # predictData <- read.csv("./data/data_processed/predictData_JunSMI6AugSMI6.csv")
-# predictData <- read.csv("./data/data_processed/predictData_JunSMI6JulPoly3TavPreAugSMI6_biasCorrected.csv")
-# predictData$X <- NULL
-# 
-# summary(predictData)
-# 
-# names(predictData)[c(1,50:150, 199:299, 348:448, 497:597, 646:746)]
-# predictData <- predictData[, c(1,507:1251)]
-# dim(predictData)
-# 
-# predictData_19992099 <- predictData[,c(1,50:150, 199:299, 348:448, 497:597, 646:746)] 
-# names(predictData_19992099)
-# 
-# predictData_20492099 <- predictData[,c(1,100:150, 249:299, 398:448, 547:597, 696:746)] 
-# names(predictData_20492099)
-# 
-# for (l in 1:262){
-#   comId <- predictData_20492099[l, 1]
-#   time <-  predictData_20492099[l, 2:length(predictData_20492099)]
-#   time <-  stack(time)
-#   time
-#   dim(time)
-#   time$ind <- NULL
-#   
-#   years <- rep(seq(2049,2099), 5)
-#   
-#   head(time)
-#   dim(time)
-#   length(years)
-#   
-#   time <- cbind(years, time)
-#   
-#   DMI <- as.data.frame(rep("DMI", 51))
-#   ICTP <-  as.data.frame(rep("ICTP", 51))
-#   KNMI <- as.data.frame( rep("KNMI",51))
-#   MPI <- as.data.frame( rep("MPI", 51))
-#   SMHIRCA <-  as.data.frame(rep ("SMIHIRCA", 51))
-#   
-#   names(DMI) <- names(ICTP) <- names(KNMI) <- names(MPI) <- names(SMHIRCA) <- "Model"
-#   
-#   model <- rbind(DMI, ICTP, KNMI, MPI, SMHIRCA)
-#   
-#   time <- cbind(model, time)
-#   
-#   time$years <- as.numeric(time$years)
-#   
-#   timeseries <- ggplot(time, aes(years, values)) + 
-#     ylim(-0.5, 0.5) +
-#     geom_line() + facet_wrap(~Model) + 
-#     geom_smooth(method = "lm", se = FALSE) + 
-#     ggtitle(paste(comId))
-#   
-#   ggsave(paste("./figures/figures_proj/JunSMI6JulPol3PreTavAugSMI6_biasCorrected_2049-2099/timeseries", comId[[1]],".pdf", sep=""), timeseries, device = "pdf", width=6, height=6 )
-# }
-# 

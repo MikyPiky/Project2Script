@@ -1,113 +1,73 @@
 ## Descriptiom ##
 
-' This Script produces summary/descriptive statistics for the climate periods, i.e. 1971 - 2000, 2021 -2050, and 2071 - 2099. "
+' This Script produces Summary Statistics (mean, median, min, max, sd) of Data (P,T,SMI) and
+  yield anomalies (predicted via different prediction models) 
+  derived from RCMs 
+  for the periods i.e. 1951 - 2099, 1971 - 2000, 1999 - 2015, 2021 -2050, and 2071 - 2099. "
 
 '
 
 ## Input ##
 
 '
--  MeteoMonth_df_tidy <- from KlimaMeteo_netcdfTo_sf$Tidy (reshaped climate data from widy to tidy)s
+-  Climate_predicted.csv <- paste("./data/data_proj/output/", namelist_RCMs[[i]],"/Climate_predicted.csv", sep="")
 
 '
 
 ## Output ##
 
-'
-- Data.frames of mean and median of subperiods 
-  MeteoMonth_df_tidy_MeanMedian_subperiod -> "./data/data_proj/output/MeanMedian_comId/MeteoMonth_df_tidy_MeanMedian_", namelist_periods[[l]], namelist_models[[i]],".csv"
-- And summary statistics of these data -> "./data/data_proj/output/MeanMedian_comId/MeteoMonth_df_tidy_MeanMedian_", namelist_periods[[l]], namelist_models[[i]],"_Summary.csv"
-
-
+'- paste("./figures/figures_exploratory/Proj/", namelist_RCMs[[i]],"/Summary_",namelist_periods[[l]],".txt", sep="")
 '
 
 
 #### Packages ####
-library(sp)
-library(rgdal)
-library(raster)
-library(rasterVis)
-library(maptools)
-library(plyr)
-library(ncdf4)
-library(zoo)
-library(foreign)
-# library(maps)
-library(colorspace)
-library(lattice)
-library(stringr)
-library(DataCombine)
-library(reshape2)
-library(sf)
-library(dplyr)
-library(readr)
-library(tidyverse)
-library(ggplot2)
-library(ggthemes)
-library(gridExtra)
-library(cowplot)
-library(grid)
-library(stargazer)
-library(stringr)
-
+source("./script/script_raw/Packages.R")
 
 ##################################################################################################################################################################################################
 ##################################################################################################################################################################################################
-
+rm(list=ls())
+source("./script/script_raw/BaseModel.R")
+getwd()
 
 ######################################################################################
 #### Check means of the administrative districts to validate the SMI climate data ####
 ######################################################################################
 
 #### Preparation of loop ####
-namelist_models <- c("DMI","ICTP", "KNMI","MPI","SMHI")
 i=1
 
-#### Start of loop through RCms ####
+#### Start of loop through RCMs ####
 for (i in 1:5){
-  MeteoMonth_df_tidy <- read.csv(paste("./data/data_proj/","MeteoMonth_df_tidy_", namelist_models[[i]],".csv", sep=""))
-  MeteoMonth_df_tidy$X <- NULL
-  
-  x <- summary(MeteoMonth_df_tidy)
-  capture.output(x, file = paste("./data/data_proj/input/MeteoMonth_df_tidy_", namelist_models[[i]],"_Summary.txt", sep=""))
+  Climate_predicted <- read_csv(paste("./data/data_proj/output/", namelist_RCMs[[i]],"/Climate_predicted.csv", sep=""))
+  Climate_predicted_summary  <- Climate_predicted %>% select(-(SMI_May6:SMI_Oct6)) %>% summary()
+  Climate_predicted_summary 
   
   #### Preparation for loop through climate periods ####
-  namelist_periods <- c("1971_2000_", "2021_2050_", "2070_2099_")
-  list_periods <- list(c(1971, 2021, 2070), c(2000,2050,2099))
+  namelist_periods <- c("1951_2099", "1971_2000", "2021_2050", "2070_2099", "1999_2015")
+  list_periods <- list(c(1951, 1971, 2021, 2070, 1999), c(2099, 2000,2050,2099, 2015))
   list_periods[[2]][[1]]
+  noAgri <- c(9780, 9776, 9763, 9180)
   
-  #### Start of loop trough climate periodsc ####
-  for (l in 1:3){
+  
+  
+  #### Start of loop trough climate periods - only SMI_Jun to SMI_Aug ####
+  for (l in seq_along(namelist_periods)){
     #### Retriev com specific Mean of the SMI of subperiods ####
-    MeteoMonth_df_tidy_MeanMedian_subperiod <-  MeteoMonth_df_tidy %>%
-      group_by(comId) %>%
-      filter(comId != ("09180") & comId != ("09780") & comId != ("09776") & comId != ("09763")) %>% # filter for coms which have no agricultural area
-      filter(year >= list_periods[[1]][[l]] & year <=  list_periods[[2]][[l]]) %>%
-      summarise(SMI_Jun_mean = round(mean(SMI_Jun),2), SMI_Jul_mean = round(mean(SMI_Jul),2), SMI_Aug_mean = round(mean(SMI_Aug),2) ,
-                SMI_Jun_median = round(median(SMI_Jun),2), SMI_Jul_median = round(median(SMI_Jul),2), SMI_Aug_median = round(median(SMI_Aug),2))
+    Climate_predicted_subperiod <-  Climate_predicted %>%
+      # select(comId, year, SMI_Jun:SMI_Aug) %>%
+      # group_by(comId) %>%
+      filter(!comId %in% noAgri) %>% # filter for coms which have no agricultural area
+      filter(year >= list_periods[[1]][[l]] & year <=  list_periods[[2]][[l]])
+    # %>%
+      # select(comId, SMI_Jun:SMI_Aug) %>%
+      # summarise_all(funs(mean, median))
+
+    # View(Climate_predicted_subperiod)
     
-    
-    write.csv(MeteoMonth_df_tidy_MeanMedian_subperiod, paste("./data/data_proj/output/MeanMedian_comId/MeteoMonth_df_tidy_MeanMedian_", namelist_periods[[l]], namelist_models[[i]],".csv", sep=""))
-    
-    # View(MeteoMonth_df_tidy_MeanMedian_subperiod )
-    
-    #### Export Summary/ Descriptive Statistics of the SMI Data ####
-    capture.output( summary(MeteoMonth_df_tidy_MeanMedian_subperiod ), file = paste("./data/data_proj/output/MeanMedian_comId/MeteoMonth_df_tidy_MeanMedian_", namelist_periods[[l]], namelist_models[[i]],"_Summary.txt", sep="") )
-    
+    #### Export Descriptive Statistics of the SMI Data ####
+    stargazer(as.data.frame(Climate_predicted_subperiod ),  out = paste("./figures/figures_exploratory/Proj/", namelist_RCMs[[i]],"/Summary_",namelist_periods[[l]],".txt", sep=""), median=T)
+    stargazer(as.data.frame(Climate_predicted_subperiod ),  out = paste("./figures/figures_exploratory/Proj/", namelist_RCMs[[i]],"/Summary_",namelist_periods[[l]],".tex", sep=""), median=T)
+
   } # End of loop trough climate periods
-  
-  
-  #### Retriev com specific Mean of the SMI for the entire period ####
-  MeteoMonth_df_tidy_MeanMedian <-  MeteoMonth_df_tidy %>%
-    group_by(comId) %>%
-    # filter(year >= 1971 & year <= 2000) %>%
-    filter(comId != ("09180") & comId != ("09780") & comId != ("09776") & comId != ("09763")) %>% # filter for coms which have no agricultural area
-    summarise(SMI_Jun_mean = round(mean(SMI_Jun),2), SMI_Jul_mean = round(mean(SMI_Jul),2), SMI_Aug_mean = round(mean(SMI_Aug),2) ,
-              SMI_Jun_median = round(median(SMI_Jun),2), SMI_Jul_median = round(median(SMI_Jul),2), SMI_Aug_median = round(median(SMI_Aug),2))
-  
-  write.csv(MeteoMonth_df_tidy_MeanMedian,paste("./data/data_proj/output/MeanMedian_comId/MeteoMonth_df_tidy_MeanMedian_", namelist_models[[i]],".csv", sep=""))
-  
-  # View(MeteoMonth_df_tidy_MeanMedian )
-  summary(MeteoMonth_df_tidy_MeanMedian )
 } # End of loop trough RCMs
 

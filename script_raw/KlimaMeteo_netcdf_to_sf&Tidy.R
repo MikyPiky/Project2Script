@@ -30,12 +30,12 @@
 '
 #### Output ####
 ## Files
-' - Tidy data.frame (nach reshape)  , MeteoMonth_df_tidy_*.csv
+' - Tidy data.frame (nach reshape) <- /data/data_proj/MeteoMonth_df_tidy_*.csv 
   '
 
 
 #### Dependencies and input ####
-'- Meterological and SMI Data derived from the climate models ("DMI","ICTP","KNMI","MPI","SMHI") -> data_proj_input
+'- Meterological and SMI Data derived from the climate models ("DMI","ICTP","KNMI","MPI","SMHI") -> data_proj/input
  '
 
 #### Packages ####
@@ -290,7 +290,7 @@ names(MeteoSMI_df_wide)
 #########################################################
 #### Export Data for each input Variable seperately ####
 #######################################################
-write.csv2(MeteoSMI_df_wide,   paste("./data/data_proj/","Meteo_df_wide_", namelist_models[[i]],".csv", sep=""))
+write.csv(MeteoSMI_df_wide,   paste("./data/data_proj/","Meteo_df_wide_", namelist_models[[i]],".csv", sep=""))
 
 print("End of loop one")
 } # Loop dauert nur 30 Sekunden, daher kann ich Daten eigentlich wieder löschen. Aber ich 
@@ -344,45 +344,25 @@ namelist_models <- c("DMI","ICTP", "KNMI","MPI","SMHI")
 
 for (i in 1:5){
   
-  #####################################################################################################
+  ####################################################################################################
   #### Read data: first as df, then combine with spatial information derived from Kreis_shape (v) ####
-  MeteoSMI_df_wide <- read.csv2(paste("./data/data_proj/","Meteo_df_wide_",namelist_models[[i]],".csv", sep=""))
-  MeteoSMI_df_wide$X <- NULL
+  MeteoSMI_df_wide <- read_csv(paste("./data/data_proj/","Meteo_df_wide_",namelist_models[[i]],".csv", sep=""))
+  MeteoSMI_df_wide$X1 <- NULL
   #### Remove wide data.frame from directory ####
   unlink(paste("./data/data_proj/","Meteo_df_wide_",namelist_models[[i]],".csv", sep=""), recursive = FALSE, force = FALSE)
   
+  MeteoSMI_df_wide
+  
   ##############################
   #### Create SF.data.frame ####
-  
-  # #### Load Shape with SpatialInformation for the Polygones of the Administrative Districts ####
-  # vg2500_krs <- read_sf("./data/data_proj/input/CLC/", "vg2500_krs")
-  # 
-  # str(vg2500_krs, 2)
-  # vg2500_krs$RS
-  # 
-  # #### Change RS to five digits #####
-  # vg2500_krs$RS <- as.integer(str_sub(vg2500_krs$RS, 1,5))
-  # vg2500_krs$RS
-
-  #### Create SF.data.frame ####
   MeteoSMI_spdf_wide  <-  bind_cols(vg2500_krs, MeteoSMI_df_wide )
-  str(MeteoSMI_spdf_wide)
-  names(MeteoSMI_spdf_wide)
-  # #### Plot one layer of sf.data.frame ####
-  # as(MeteoSMI_spdf_wide, 'Spatial')
-  # spplot(as(MeteoSMI_spdf_wide, 'Spatial'),"SMJan1951")
-  # 
-  # ggplot(MeteoSMI_spdf_wide) +
-  #   geom_sf(aes(fill = SMJan1951)) 
-
   
-  
-
   ####################################
   #### Preperation for Reshaping ####
   ##################################
   names(MeteoSMI_spdf_wide)
   (dim(MeteoSMI_spdf_wide)[2] - 6)
+  
   #########################################################################################################################################
   #### Generate list of starting(year 1951) and ending points (2099) of each Meteo Month combination necessary for list_MeteoMonthYear ####
   
@@ -525,7 +505,7 @@ for (i in 1:5){
   ############################################
   #### Write newly created MeteoMonth_df_tidy ####
   ##########################################
-  write.csv(MeteoMonth_df_tidy, paste("./data/data_proj/","MeteoMonth_df_tidy_", namelist_models[[i]],".csv", sep=""))
+  write_csv(MeteoMonth_df_tidy, paste("./data/data_proj/","MeteoMonth_df_tidy_", namelist_models[[i]],".csv", sep=""))
   
   str(MeteoMonth_df_tidy)
 

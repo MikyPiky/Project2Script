@@ -1,6 +1,7 @@
-#######################################################################
-## Base Model for Predictions of Soil Moisture Effects on Crop Yield ##
-#######################################################################
+#############################
+#### Data Pre-Processing ####
+#############################
+
 #### Description of Script ####
 ' - Prepare data.frame on yield and meteo vars for exploring models and fitting / train final model
     - Load Maize_meteo -> filter for relevant data (siloMais, etc)
@@ -11,8 +12,11 @@
     - Issue with Outliers - Correct Typo in Data
     - Change Variable Names: Prec -> P, Tavg -> T 
     - Create yield anonmalies (Yield - comId specific mean )
-  - Explore Models
-      - many results, please see specific section
+  
+
+
+- Explore Models
+    - many results, please see specific section
   -  Explore differences on estimation procedure which use plm, demeaned data, or LSDV - in particular for nonlinearities 
       - many results, please go to section
   - Use of Caret Package: I started to work with the CARET Package, in particular to implement cross-validation that only takes into 
@@ -132,23 +136,62 @@ Maize_meteo$SMI_Aug6 <- relevel(cut(Maize_meteo$SMI_Aug, breaks = c(0, 0.1, 0.2,
                                             "abnrml wt" ,"abndnt wt", "svr wt")), ref= "nrml") 
 table(Maize_meteo$SMI_Aug6,Maize_meteo$year  )
 
+#####################################
+#### Demean meteorological data ####
+###################################
+str(Maize_meteo)
 
+Maize_meteo_demean <- Maize_meteo %>%
+                      select(comId, year, Pre_Jan: PET_Dec) %>%
+                      group_by(comId) %>%
+                      mutate_all(funs(. -mean(.)))
+
+'For the case that the data do not have full observations (17), no mean is created and the data are transformed into NAs'
+
+# Maize_meteo_mean <- Maize_meteo %>%
+#   select(comId, year, siloMaize,  Pre_Jan: PET_Dec) %>%
+#   group_by(comId) %>%
+#   mutate_all(funs(mean))
+
+str(Maize_meteo_demean)
+
+names(Maize_meteo_demean) <- paste(names(Maize_meteo_demean), "_demean", sep="")
+
+Maize_meteo_demean$comId_demean <- Maize_meteo$comId
+Maize_meteo_demean$year_demean <- Maize_meteo$year
+
+Maize_meteo_demean <- as.data.frame(Maize_meteo_demean)
+
+dim(Maize_meteo)
+dim(Maize_meteo_demean)
+
+Maize_meteo_merge <- cbind(Maize_meteo, Maize_meteo_demean)
+
+dim(Maize_meteo_merge )
+
+View(Maize_meteo_demean)
+View(Maize_meteo_mean)
+View(Maize_meteo)
+View(Maize_meteo_merge)
+ 
 #########################################################################################
 #### Remove comIds with more than one observations missing to avoid leverage issues #### 
 #######################################################################################
 
 ############################################
 ## First delete all observations with NAs ##
-Maize_meteo <- na.omit(Maize_meteo)
-length(unique(Maize_meteo$comId)) # 365 / 373
+is.na(Maize_meteo_merge)
+Maize_meteo_naOmit <- na.omit(Maize_meteo_merge)
+ 
+length(unique(Maize_meteo_naOmit$comId)) # 365 / 373
 '45 comIds have no observation in general '
 
 ######################################################
 ## Delete all comIds with less than 9 observations ##
-missing_distribution <- as.data.frame(table(Maize_meteo$comId))
+missing_distribution <- as.data.frame(table(Maize_meteo_naOmit$comId))
 # str(missing_distribution)
-sum(table(Maize_meteo$comId) < 9) # 103 comIds have missing independent data when only considering full data sets, 31 with a cutoff of nine
-table(Maize_meteo$comId) < 9 
+sum(table(Maize_meteo_naOmit$comId) < 9) # 103 comIds have missing independent data when only considering full data sets, 31 with a cutoff of nine
+table(Maize_meteo_naOmit$comId) < 9 
 
 ####################################################
 #### Make map of distribution of missing values ####
@@ -215,21 +258,21 @@ list_delete[[1]]
 ## Look at comIds with missing dependent data ##
 k <- NULL
 for (k in 1:length(list_delete)){
-print(Maize_meteo[Maize_meteo$comId == list_delete[[k]],1:6])  
+print(Maize_meteo_naOmit[Maize_meteo_naOmit$comId == list_delete[[k]],1:6])  
 }
 ' Das Fehlen der Dateneinträge schein meistens systematisch zu sein, da es meisten Blöcke sind, welche fehlen'
 
 ## Delete comIds with at least one observation missing ##
-temp <- Maize_meteo
+temp <- Maize_meteo_naOmit
 for (k in 1:length(list_delete))
 {
-  print(Maize_meteo[Maize_meteo$comId==list_delete[k],])
+  print(Maize_meteo_naOmit[Maize_meteo_naOmit$comId==list_delete[k],])
   temp <- (temp[!temp$comId==list_delete[k],])
 }
 
 
 ## Number of deleted rows ##
-dim(temp) - dim(Maize_meteo) # -148
+dim(temp) - dim(Maize_meteo_merge) # -148
 
 ## Further use old name for data.frame
 Maize_meteo <- temp
@@ -402,15 +445,15 @@ rm(list=ls()[! ls() %in% c("Maize_meteo", "vg2500_krs", "avgYield_comId")])
 
 
 #### Read in Maize_meteo Data ####
-Maize_meteo <- read.csv( file="./data/data_processed/Maize_meteo.csv")
+Maize_meteo2 <- read.csv( file="./data/data_processed/Maize_meteo.csv")
 Maize_meteo$X <- NULL
 str(Maize_meteo)
-
+View(Maize)
 ##############################
 #### (Time) - Demean Data ####
 str(Maize_meteo)
 ## Scale all the data within a comId ##
-Maize_meteo_demean1  <- ddply(Maize_meteo,  ~ comId,  numcolwise(scale, scale=FALSE))
+Maize_meteo_demean  <- ddply(Maize_meteo2,  ~ comId,  numcolwise(scale, scale=FALSE))
 
 summary(Maize_meteo_demean1)#
 str(Maize_meteo_demean1)
@@ -649,29 +692,32 @@ lm.fit_SMI_6_Jul_comId <- lm(siloMaize ~
 ############################################
 #### Fit combined model - yield Anomaly ####
 #### siloMaizeAnomaly - lm 
+summary(Maize_meteo$siloMaizeAnomaly)
+plot(Maize_meteo$siloMaizeAnomaly)
 lm.fit_SMI_6_Jun_Aug_comId_anomaly <- lm(siloMaizeAnomaly ~ 
-                                         + T_Jul 
-                                         + P_Jul  
-                                         + I(T_Jul^2) 
-                                         + I(T_Jul^3) 
-                                         + I(P_Jul^2) 
-                                         + I(P_Jul^3) 
-                                         + SMI_Jun6 
-                                         + SMI_Aug6 
-                                         + comId,
+                                         # + T_Jul 
+                                         # + P_Jul  
+                                         # + I(T_Jul^2) 
+                                         # + I(T_Jul^3) 
+                                         # + I(P_Jul^2) 
+                                         # + I(P_Jul^3) 
+                                         + SMI_Jun6
+                                         # + SMI_Aug6 
+                                         + comId
+                                         ,
                                          data = Maize_meteo)
 summary(lm.fit_SMI_6_Jun_Aug_comId_anomaly )  # Adjusted R-squared:   0.3362 (silomaizeAnomaly)
 
 # #### siloMaizeAnomaly - plm 
 plm.fit_SMI_6_Jun_Aug_comId_anomaly <- plm(siloMaizeAnomaly ~ 
-                                            + T_Jul
-                                            + I(T_Jul^2)
-                                            + I(T_Jul^3)
-                                            + P_Jul
-                                            + I(P_Jul^2)
-                                            + I(P_Jul^3)
+                                            # + T_Jul
+                                            # + I(T_Jul^2)
+                                            # + I(T_Jul^3)
+                                            # + P_Jul
+                                            # + I(P_Jul^2)
+                                            # + I(P_Jul^3)
                                             + SMI_Jun6
-                                            + SMI_Aug6
+                                            # + SMI_Aug6
                                             , data = Maize_meteo, effect="individual", model=("within"), index = c("comId","year"))
 summary(plm.fit_SMI_6_Jun_Aug_comId_anomaly ) # Adjusted R-squared:  0.33616 (silomaizeAnomaly)
 

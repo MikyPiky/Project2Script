@@ -7,25 +7,14 @@
 Script to make climate projections for the period 1951 - 2099 for each RCM () and 
 prediction model (SMI June & August vs SMI July only - July Prec and Temp in both)
 
-Here, we argue that the ex ante approach, i.e. first calculating the adminstrative district specific yield anomaly by demeaning, is the proper way to
-make the predictions, since those show a better behavior for the time series plot for regional units (administrative districts and federal states). There,
-no offset is found when using the ex ante prediction approach compared to ex post (predict absolute values and then demean by substracting the comId 
-specific mean), where such an offset can be found. 
-
-
-
-
+Ex post (predicting absolut yield values and than demean them) and ex ante demeaning (directly predicting demeaned SMI values) deliver the same results.
 
 '
 #### Output ####
 ## Files
 '
-
-  
-predictData_tidy_complete ->"./data/data_proj/output/",modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv" (ex Ante - Standard)
-predictData_tidy_complete_expost -> "./data/data_proj/output/",modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_expostAnomaly.csv" (ex Post)
-
-
+predictData_tidy_complete         -> "./data/data_proj/output/",modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv" (ex Ante - Standard)
+predictData_tidy_complete_expost  -> "./data/data_proj/output/",modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_expostAnomaly.csv" (ex Post)
 '
 ## Plots
 ''
@@ -34,8 +23,8 @@ predictData_tidy_complete_expost -> "./data/data_proj/output/",modelListMatrixNa
 ''
 
 #### Dependencies and Input ####
-' - Maize_meteo.csv -> /Proj2/data/data_proj/output/ (BasePrediction_exploration)
-    NewValues -> /data/data_proj/MeteoMonth_df_tidy_RCM[[r]]/ (indexed for various RCMs) <- KlimaMeteo_netcdfTo_sf$Tidy.R
+' - Maize_meteo.csv -> /Proj2/data/data_proj/output/ (BaseData_PreProcessing.R)
+    NewValues -> /data/data_proj/MeteoMonth_df_tidy_*.csv/ (indexed for various RCMs) <- KlimaMeteo_netcdfTo_sf$Tidy.R
 '
 
 
@@ -66,6 +55,7 @@ library(ggplot2)
 library(grDevices)
 ##############################################################################################################################################################################
 
+
 ###################################################
 ##### Read Maize_meteo.csv  ####
 #################################################
@@ -86,19 +76,15 @@ str(vg2500_krs, 2)
 vg2500_krs$RS <- as.integer(str_sub(vg2500_krs$RS, 1,5))
 vg2500_krs$RS
 
-#################################
-#### Load AnomalyCorrection ####
-###############################
+##########################################
+#### Load com specific average yield ####
+########################################
 
 avgYield_comId <- read.csv( file="./data/data_processed/avgYield_comId.csv")
 avgYield_comId$X <- NULL
 avgYield_comId$comId <- as.factor(avgYield_comId$comId)
 str(avgYield_comId)
 
-##############################################################################################################################################################################
-##############################################################################################################################################################################
-#### Climate Projections #####
-##############################
 
 #########################################################################################
 #### Preparations to make predictions for the data derived from five climate models ####
@@ -107,20 +93,11 @@ str(avgYield_comId)
   In particular I cannot work with factor(comId) but need to derive the model matrix to be able to use predict().'
 
 
-# #######################################################
-# #### Read in Climate Data with Stepwise Funcktions ####
-# 
-
-# Maize_meteo <- read.csv(file="./data/data_processed/Maize_meteo")
-# Maize_meteo$X <- NULL
-# str(Maize_meteo)
-
-###################################################################
-#### Create data.frame including variables used for estimation ####
+##############################################
+#### Select variables used for estimation ####
 Maize_meteo_short <- 
   Maize_meteo %>% 
   select (year,comId, siloMaize, SMI_Jun6,SMI_Jul6, SMI_Aug6, T_Jul, P_Jul, siloMaizeAnomaly)
-str(Maize_meteo_short)
 
 
 #########################################
@@ -129,51 +106,43 @@ str(Maize_meteo_short)
 'Here I include the model.matrix for the comID exclusively since the  predict command had issues to deal with those. 
 Also, only the data used in the models are considered further.'
 
-## Create model.matrix ##
+#### Create model.matrix ####
 modelmatrix <- model.matrix(~ Maize_meteo$comId)
 dim(modelmatrix)
 str(modelmatrix)
 
-## Convert model.matrix to data.frame ##
+#### Convert model.matrix to data.frame ####
 modelmatrix_Df <-as.data.frame((modelmatrix))
 str(modelmatrix_Df)
 modelmatrix_Df$`Maize_meteo$comId1002` # There is a one for each year in the data when comId == 1002 is true
 
-# ## Convert all numeric to factor ##
-# modelmatrix_Df <- lapply(modelmatrix_Df, factor )
-
-## Delte modelmatrix ##
+#### Delete modelmatrix ####
 rm(modelmatrix)
 
-## Cbind modelmatrix with short data.frame ##
-
+#### Cbind modelmatrix with short data.frame ####
 Maize_meteo_modelmatrix <- cbind(Maize_meteo_short, modelmatrix_Df)
 Maize_meteo_modelmatrix$`(Intercept)` <- NULL
 
-## Clean up names  ##
+#### Clean up names  ####
 x <- make.names(names(Maize_meteo_modelmatrix))
-str(x)
 x
 colnames <- gsub("Maize_meteo.", "", x)
 colnames(Maize_meteo_modelmatrix) <- colnames
 str(Maize_meteo_modelmatrix)
 
-
-
 ########################################
 #### Fit model used for prediction ####
 ######################################
 
-## Delete columns year and comId ##
-
+#### Delete columns year and comId ####
 names(Maize_meteo_modelmatrix)
 Maize_meteo_modelmatrix$year <- NULL
 Maize_meteo_modelmatrix$comId <- NULL
 
-#################################################
-## lm.fit with explicit model.matrix of comIds ##
+#####################################################
+#### lm.fit with explicit model.matrix of comIds ####
 
-## June to August ##
+#### June to August ####
 ## Yield
 drops <- c("SMI_Jul6", "siloMaizeAnomaly")
 lm.fit_SMI_6_Jun_Aug_modelmatrix <- 
@@ -181,14 +150,14 @@ lm.fit_SMI_6_Jun_Aug_modelmatrix <-
      data = Maize_meteo_modelmatrix[ , !(names(Maize_meteo_modelmatrix) %in% drops)])
 summary(lm.fit_SMI_6_Jun_Aug_modelmatrix) # Adjusted R-squared:   0.6857 
 
-## Yield - Anomaly
+## Yield - Anomaly 
 drops <- c("SMI_Jul6", "siloMaize")
 lm.fit_SMI_6_Jun_Aug_modelmatrix_anomaly <- 
   lm(siloMaizeAnomaly ~ I(T_Jul^2) + I(T_Jul^3)  +I(P_Jul^2) +  I(P_Jul^3) + .   ,
      data = Maize_meteo_modelmatrix[ , !(names(Maize_meteo_modelmatrix) %in% drops)])
 summary(lm.fit_SMI_6_Jun_Aug_modelmatrix_anomaly) # Adjusted R-squared:    0.3362 
 
-## July ##
+#### July ####
 ## Yield
 drops <- c("SMI_Jun6", "SMI_Aug6", "siloMaizeAnomaly")
 lm.fit_SMI_6_Jul_modelmatrix <- 
@@ -204,36 +173,36 @@ lm.fit_SMI_6_Jul_modelmatrix_anomaly <-
 summary(lm.fit_SMI_6_Jul_modelmatrix_anomaly) # Adjusted R-squared:    0.2841 
 
 
-####################################################
-## lm.fit with NO explicit model.matrix of comIds ##
-
-## June to August ##
-## Yield
-# drops <- c("SMI_Jul6", "siloMaizeAnomaly")
-str(Maize_meteo_short)
-lm.fit_SMI_6_Jun_Aug <- 
-  lm(siloMaize ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jun6 + SMI_Aug6 + comId  ,
-     data = Maize_meteo_short )
-summary(lm.fit_SMI_6_Jun_Aug) # Adjusted R-squared:   0.6857 
-
-## Yield - Anomaly
-lm.fit_SMI_6_Jun_Aug_anomaly <- 
-  lm(siloMaizeAnomaly ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jun6 + SMI_Aug6 + comId  ,
-     data = Maize_meteo_short)
-summary(lm.fit_SMI_6_Jun_Aug_anomaly) # Adjusted R-squared:    0.3362 
-
-## July ##
-## Yield
-lm.fit_SMI_6_Jul <- 
-  lm(siloMaize ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jul6 + comId  ,
-     data = Maize_meteo_short)
-summary(lm.fit_SMI_6_Jul) # Adjusted R-squared:   0.661 
-
-## Yield - Anomaly
-lm.fit_SMI_6_Jul_anomaly <- 
-  lm(siloMaizeAnomaly ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jul6 + comId  ,
-     data = Maize_meteo_short)
-summary(lm.fit_SMI_6_Jul_anomaly) # Adjusted R-squared:    0.2841 
+# ########################################################    
+# #### lm.fit with NO explicit model.matrix of comIds ####
+# 
+# ## June to August ##
+# ## Yield
+# # drops <- c("SMI_Jul6", "siloMaizeAnomaly")
+# str(Maize_meteo_short)
+# lm.fit_SMI_6_Jun_Aug <- 
+#   lm(siloMaize ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jun6 + SMI_Aug6 + comId  ,
+#      data = Maize_meteo_short )
+# summary(lm.fit_SMI_6_Jun_Aug) # Adjusted R-squared:   0.6857 
+# 
+# ## Yield - Anomaly
+# lm.fit_SMI_6_Jun_Aug_anomaly <- 
+#   lm(siloMaizeAnomaly ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jun6 + SMI_Aug6 + comId  ,
+#      data = Maize_meteo_short)
+# summary(lm.fit_SMI_6_Jun_Aug_anomaly) # Adjusted R-squared:    0.3362 
+# 
+# ## July ##
+# ## Yield
+# lm.fit_SMI_6_Jul <- 
+#   lm(siloMaize ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jul6 + comId  ,
+#      data = Maize_meteo_short)
+# summary(lm.fit_SMI_6_Jul) # Adjusted R-squared:   0.661 
+# 
+# ## Yield - Anomaly
+# lm.fit_SMI_6_Jul_anomaly <- 
+#   lm(siloMaizeAnomaly ~ I(T_Jul) + I(T_Jul^2) + I(T_Jul^3) + I(P_Jul)  + I(P_Jul^2) +  I(P_Jul^3) + SMI_Jul6 + comId  ,
+#      data = Maize_meteo_short)
+# summary(lm.fit_SMI_6_Jul_anomaly) # Adjusted R-squared:    0.2841 
 
 
 ###############################################
@@ -293,11 +262,7 @@ for (s in 1:length(modelListMatrix) ){
   #### Start loop ####
 
   for (r in 1:5){
-  
-
-    #####################################
     #### Load Projections of one RCM ####  
-
     NewValues <-  read.csv( paste("./data/data_proj/", "MeteoMonth_df_tidy_", namelist_models[[r]],".csv", sep=""))
     names(NewValues)  
     NewValues$X <- NULL
@@ -310,35 +275,6 @@ for (s in 1:length(modelListMatrix) ){
     
     str(NewValues)
     
-    
-    
-    #### Check comId specific mean and median for soil moisture conditional on comIds - 1951 - 2099 ####
-    NewValues_MeanMedian_comId <-  NewValues %>%
-                        group_by(comId) %>%
-                        summarise(SMI_Jun_mean = round(mean(SMI_Jun),2), SMI_Jul_mean = round(mean(SMI_Jul),2), SMI_Aug_mean = round(mean(SMI_Aug),2) ,
-                                  SMI_Jun_median = round(median(SMI_Jun),2), SMI_Jul_median = round(median(SMI_Jul),2), SMI_Aug_median = round(median(SMI_Aug),2) )
-    # View(NewValues_MeanMedian_comId)
-
-    write.csv(NewValues_MeanMedian_comId,  paste("./data/data_proj/output/", "NewValues_MeanMedian_comId_", namelist_models[[r]],".csv", sep=""))
-
-    #### Check comId specific mean and median for soil moisture  conditional on comIds - time period 1951 to 2000 ####
-    NewValues_MeanMedian_comId_1971To2000 <-  NewValues %>% 
-      group_by(comId) %>% 
-      filter(year >= 1971 & year <= 2000) %>% 
-      summarise(SMI_Jun_mean = round(mean(SMI_Jun),2), SMI_Jul_mean = round(mean(SMI_Jul),2), SMI_Aug_mean = round(mean(SMI_Aug),2) ,
-                SMI_Jun_median = round(median(SMI_Jun),2), SMI_Jul_median = round(median(SMI_Jul),2), SMI_Aug_median = round(median(SMI_Aug),2))
-    # View(NewValues_MeanMedian_comId_1971To2000)
-    write.csv(NewValues_MeanMedian_comId_1971To2000,  paste("./data/data_proj/output/", "NewValues_MeanMedian_comId_1971To2000_", namelist_models[[r]],".csv", sep=""))
-    
-    #### Check comId specific mean and median for soil moisture  conditional on comIds - time period 1951 to 2000 ####
-    NewValues_MeanMedian_comId_1951To2000 <-  NewValues %>% 
-                        group_by(comId) %>% 
-                        filter(year >= 1951 & year <= 2000) %>% 
-                        summarise(SMI_Jun_mean = round(mean(SMI_Jun),2), SMI_Jul_mean = round(mean(SMI_Jul),2), SMI_Aug_mean = round(mean(SMI_Aug),2) ,
-                                  SMI_Jun_median = round(median(SMI_Jun),2), SMI_Jul_median = round(median(SMI_Jul),2), SMI_Aug_median = round(median(SMI_Aug),2))
-    # View(NewValues_MeanMedian_comId_1951To2000)
-    write.csv(NewValues_MeanMedian_comId_1951To2000,  paste("./data/data_proj/output/", "NewValues_MeanMedian_comId_1951To2000_", namelist_models[[r]],".csv", sep=""))
-
     ##################################################################################
     #############################################
     ##### Prepare data.frame for prediction ####
@@ -359,13 +295,10 @@ for (s in 1:length(modelListMatrix) ){
                                                  "abnrml wt" ,"abndnt wt", "svr wt")), ref= "nrml") 
     #################################
     #### Choose variables needed ####
-
     NewValues_short <- 
       NewValues %>% 
       select (year, comId, SMI_Jun6, SMI_Jul6, SMI_Aug6, T_Jul, P_Jul)
     
-     # as.data.frame(NewValues[,names(NewValues)%in%c("year","comId", "siloMaize_logtrend",  "SMI_Jun6","SMI_Jul6", "SMI_Aug6", "T_Jul", "P_Jul")])
-
     ##############################################################################################################
     #### Merge with Yield Data Frame to get same comIds, i.e. those which have a least nine observations (334) ####
     NewValues_short$comId <- as.factor(NewValues_short$comId)
@@ -379,7 +312,11 @@ for (s in 1:length(modelListMatrix) ){
     
     ######################################################################
     #### Extract NewValuesyear comIds in the proper order for merging ####
-    NewValuesyear_comId_order <- NewValues_merge %>% filter(year==2000) %>% select(comId)
+    NewValuesyear_comId_order <- 
+      NewValues_merge %>% 
+      filter(year==2000) %>% 
+      select(comId)
+    
     str(NewValuesyear_comId_order )
     
     ######################################################
@@ -387,8 +324,8 @@ for (s in 1:length(modelListMatrix) ){
     predictData <- predictData_anomaly <- predictData_anomaly_expost <- NewValuesyear_comId_order
     str(predictData)
 
-    ###########################################
-    ## Generate Factors for comIds and years ##
+    ###############################################
+    #### Generate Factors for comIds and years ####
     NewValues_merge[,c("comId","year")] <- lapply(NewValues_merge[,c("comId","year")], factor )
     
     #########################################
@@ -402,7 +339,7 @@ for (s in 1:length(modelListMatrix) ){
     ###############################################
     #### Generate Model.Matrix including NULLS ####
     dim(modelmatrix_Df)
-    modelmatrix_Df_NULL <-modelmatrix_Df
+    modelmatrix_Df_NULL <- modelmatrix_Df
     modelmatrix_Df_NULL[modelmatrix_Df_NULL == 1] <- 0
     
     View(modelmatrix_Df_NULL)
@@ -437,10 +374,10 @@ for (s in 1:length(modelListMatrix) ){
     NewValues_modelmatrix_NULL_demeaned <-  NewValues_modelmatrix_NULL %>% filter(year > 1971 & year < 2001) %>% summarise(SMI_Jun6_mean_ref = mean(SMI_Jun6))
     dim(NewValues_modelmatrix_NULL_demeaned )
     
-    ###################################################################################################
-    #######################################################################
+    ########################################################################
     #### Make prediction for each year derived from the climate models ####
-    " Ab hier loop über die Jahre 1951 - 2099 der Projection des jeweiligen Klimamodels"
+    ######################################################################
+    "Ab hier loop über die Jahre 1951 - 2099 der Projection des jeweiligen Klimamodels"
     
     #### Define list of years to loop through ####
     listyear <- seq (1951, 2099)
@@ -448,7 +385,6 @@ for (s in 1:length(modelListMatrix) ){
     listyear[149]
     
     #### Start loop over each year derived from the climate projections ####
-
     for (l in 1:length(listyear)){
 
       print(listyear[[l]])
@@ -458,12 +394,6 @@ for (s in 1:length(modelListMatrix) ){
       rownames(NewValuesyear) <- NULL
       str(NewValuesyear)
   
-
-      # View(NewValuesyear)
-      
-      # #### Clean variables (comId, year) not needed for prediction ####
-      # NewValuesyear$year <- NewValuesyear$comId <- NULL
-      
       ###################################
       #### Make absolute predictions ####
       summary(modelListMatrix[[s]])
@@ -490,14 +420,15 @@ for (s in 1:length(modelListMatrix) ){
       summary(predictlm_anomaly)
       'Das passt hier nicht, die predictions sind zu groß'
       
-      #### Change name of predictlm_anomaly  data.frame ####
+      ################################################
+      #### Change name of predictlm_* data.frames ####
       names(predictlm) <- names(predictlm_anomaly ) <- names(predictlm_anomaly_expost) <- paste(listyear[l])
 
-      
+      #######################################
       #### Manual prediction for com1001 ####
       ' The calculation of the manual prediction can be found in Baseprediction_long. However, it made sense.'
       
-
+      #################################################################
       #### Combine to one large data.frame including all the years ####
       predictData                <- cbind(predictData, predictlm)
       predictData_anomaly_expost <- cbind(predictData_anomaly_expost, predictlm_anomaly_expost)
@@ -508,69 +439,52 @@ for (s in 1:length(modelListMatrix) ){
       
     } ## End of loop through all the years of one climate model ##
     
-    #########################################################
-    #### Save one wide data.frame for each climate model ####
-    str(predictData)
-    str(predictData_anomaly )
-
-    str(predictData_anomaly_expost )
-   
-    names(predictData)
-    names(predictData_anomaly)
-    names(predictData_anomaly_expost)
+    # #########################################################
+    # #### Save one wide data.frame for each climate model ####
+    # str(predictData)
+    # str(predictData_anomaly )
+    # str(predictData_anomaly_expost )
     # 
-    # summary(predictData)
-    # summary(predictData_anomaly)
-    # summary(predictData_anomaly_expost)
+    # names(predictData)
+    # names(predictData_anomaly)
+    # names(predictData_anomaly_expost)
 
+    ##########################################
+    #### Convert wide data,frame to tidy ####
+    ########################################
     
-
-    ##########################
-    #### Convert to tidy ####
-    ########################
-    
-    #########################################
-    ## Data.frame with absolut predictions ##
+    #### Data.frame with absolut predictions ####
     predictData_tidy <- predictData %>% gather(year, Y_absolut, 2:150, factor_key = T)
     str(predictData_tidy)
     levels(predictData_tidy$year)
     
 
-    ###################################################
-    ## Data.frane with anomaly predictions - ex ante ##
+    #### Data.frane with anomaly predictions - ex ante ####
     predictData_anomaly_tidy <- predictData_anomaly  %>% gather(year, Y_anomaly, 2:150, factor_key = T)
     str(predictData_anomaly_tidy)
     
-    ###################################################
-    ## Data.frame with anomaly predictions - ex post ##
+    #### Data.frame with anomaly predictions - ex post ####
     predictData_anomaly_expost_tidy <- predictData_anomaly_expost  %>% gather(year, Y_anomaly_ep, 2:150, factor_key = T)
     str(predictData_anomaly_expost_tidy)
 
-    
-    ################################################
-    ## Create data.frame defining the model names ##
+    ####################################################
+    #### Create data.frame defining the model names ####
     model <- as.data.frame(rep(namelist_models[[r]], dim(predictData_tidy)[1]))
     names(model) <- "model"
     
-    ##########################################
-    ## Append Model Name to tidy data.frame ##
-    predictData_tidy <- cbind(model, predictData_tidy)
-    predictData_anomaly_tidy <- cbind(model, predictData_anomaly_tidy)
-
+    ##############################################
+    #### Append Model Name to tidy data.frame ####
+    predictData_tidy                <- cbind(model, predictData_tidy)
+    predictData_anomaly_tidy        <- cbind(model, predictData_anomaly_tidy)
     predictData_anomaly_expost_tidy <- cbind(model, predictData_anomaly_expost_tidy)
 
     
-    ##########################################################
-    ## Combine to one large data.frame including all models ##
-    predictData_tidy_all <- rbind(predictData_tidy_all, predictData_tidy)
-    predictData_anomaly_tidy_all <- rbind(predictData_anomaly_tidy_all, predictData_anomaly_tidy)
-
+    ##############################################################
+    #### Combine to one large data.frame including all models ####
+    predictData_tidy_all                <- rbind(predictData_tidy_all, predictData_tidy)
+    predictData_anomaly_tidy_all        <- rbind(predictData_anomaly_tidy_all, predictData_anomaly_tidy)
     predictData_anomaly_expost_tidy_all <- rbind(predictData_anomaly_expost_tidy_all, predictData_anomaly_expost_tidy)
-    
 
-    str(predictData_tidy_all )
-    
-  
   } ## End of loop over different climate models
 
 
@@ -578,19 +492,17 @@ for (s in 1:length(modelListMatrix) ){
 #### Combine absolute predictions and anomaly predictions to one tidy data.frame ####
 str(predictData_tidy_all)
 str(predictData_anomaly_tidy_all)
-
 str(predictData_anomaly_expost_tidy_all)
 
-
+####
 names(predictData_tidy_all)[4] <- "Y"
 
 predictData_tidy_complete <- merge(predictData_tidy_all, predictData_anomaly_tidy_all)
-
 predictData_tidy_complete_expost <- merge(predictData_tidy_all, predictData_anomaly_expost_tidy_all)
 
-
-write.csv(predictData_tidy_complete, paste("./data/data_proj/output/",modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv", sep="") )
-
+#################################
+#### Write large data.frames ####
+write.csv(predictData_tidy_complete,        paste("./data/data_proj/output/",modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_Anomaly.csv", sep="") )
 write.csv(predictData_tidy_complete_expost, paste("./data/data_proj/output/",modelListMatrixNames[[s]],"/Yield_predict_complete_1951-2099_tidy_expostAnomaly.csv", sep="") )
 
 
