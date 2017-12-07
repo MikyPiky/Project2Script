@@ -96,7 +96,8 @@
   - Input:  - Maize_meteo.csv 
             - MeteoMonth_df_tidy_*.csv
   - Output: - Prediction of silage maize yield anomalies based on different estimation models for each RCM in namelist_model:
-              Climate_predicted -> ./data/data_proj/output/", namelist_RCMs[[r]],"/Climate_predicted.csv
+          - Climate_predicted <- ./data/data_proj/output/", namelist_RCMs[[r]],"/Climate_predicted.csv
+          - Climate_predicted_allRCMs <- ./data/data_proj/output/Climate_predicted_allRCMs.csv
 '
 
 #### Projection evaluation ####

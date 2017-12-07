@@ -14,6 +14,8 @@ Ex post (predicting absolut yield values and than demean them) and ex ante demea
 ## Files
 '
   - Climate_predicted <- ./data/data_proj/output/", namelist_RCMs[[r]],"/Climate_predicted.csv
+  - Climate_predicted_allRCMs <- ./data/data_proj/output/Climate_predicted_allRCMs.csv
+
 
 
 '
@@ -251,12 +253,18 @@ for (r in seq_along(namelist_RCMs) ) {
   dir.create( paste("./data/data_proj/output/", namelist_RCMs[[r]], sep="") , showWarnings = F) # does not overwrite automatically
   
   write_csv(Climate_predicted , paste("./data/data_proj/output/", namelist_RCMs[[r]],"/Climate_predicted.csv", sep="") )
+  
 
 
 } ## End of loop which uses different models to make predictions
 
+##################################################################
+#### Create one large data.frame including all climate model ####
+Climate_predicted_list <- list( "DMI" = list(), "ICTP"= list(), "KNMI"= list(), "MPI"= list(),  "SMHI"= list())
 
+for(r in seq_along(namelist_RCMs)){
+Climate_predicted_list[[r]]<- read_csv(paste("./data/data_proj/output/", namelist_RCMs[[r]],"/Climate_predicted.csv", sep="") )
+}
 
-# rm(list=ls())
-
-
+Climate_predicted_allRCMs <- bind_rows(bind_rows(bind_rows(bind_rows(Climate_predicted_list[[1]], Climate_predicted_list[[2]]), Climate_predicted_list[[3]]), Climate_predicted_list[[4]]), Climate_predicted_list[[5]])
+write_csv(Climate_predicted_allRCMs, paste("./data/data_proj/output/Climate_predicted_allRCMs.csv"))

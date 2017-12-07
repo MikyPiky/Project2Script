@@ -73,6 +73,7 @@ names(vg2500_krs)[2] <- "comId"
 ## Set years to loop through ##
 listyear <- seq(1999, 2015)
 
+result <- data.frame(matrix(nrow = 4625, ncol = 10))
 
 
 ######################################################################
@@ -80,79 +81,92 @@ listyear <- seq(1999, 2015)
 ####################################################################
 
 for (i in seq_along(modelList)){
-  
-  #### Create directories output saved in ####
-  dir.create(paste("./figures/figures_exploratory/Train/", modelListNames[[i]], sep=""), showWarnings = F)
-  dir.create(paste("./data/data_processed/Train/", modelListNames[[i]], sep=""), showWarnings = F)
-  
-  #### Create container to store predicted data of each annual chunk ####
-  predictData_train_anomaly_allyears  <- data.frame()
 
-  #### Anomaly ####
-  summary(Maize_meteo$siloMaizeAnomaly)
-  myPalette_anomaly <- colorRampPalette((brewer.pal(11, "BrBG")))
-  sc_anomaly <- scale_fill_gradientn("Yield Deviation", colours = myPalette_anomaly(400), limits=c(- 300, 300))
-  
+  #### Create directories output saved in ####
+  # dir.create(paste("./figures/figures_exploratory/Train/", modelListNames[[i]], sep=""), showWarnings = F)
+  # dir.create(paste("./data/data_processed/Train/", modelListNames[[i]], sep=""), showWarnings = F)
+  'Now all files are saved in one output, compareable to climate predictions. '
+
+  ### Create container to store predicted data of each annual chunk ####
+  # predictData_train_anomaly_allyears  <- data.frame()
+
+
+
   ##############################################################
   #### Predict YIELD ANOMALY model using model in modelList ####
   predict_year_anomaly  <- as.tibble(predict(modelList[[i]], newdata = Maize_meteo))
   names(predict_year_anomaly) <- paste("siloMaizeAnomaly_predicted")
-  
-  #### Combine with Maize_meteo ####
-  Maize_meteo_predicted <- bind_cols( Maize_meteo,  predict_year_anomaly)
-  
-  
-  
-  #####################################################
-  #### Start loop trough 17 years in training data ####
-  for(m in 1:17){
-    
-    ## Create data.frame for the year m ##
-    Maize_meteo_year <- Maize_meteo_predicted %>% select(year:state, siloMaizeAnomaly_predicted ) %>% filter(year == listyear[[m]] )
-    Maize_meteo_year
-    
-    ##############################
-    #### Plot predicted data ####
-    ############################
 
-    ####################################
-    #### Create spatial data.frame #####
-    predictData_train_sf <- NULL
-    predictData_train_sf <- inner_join(vg2500_krs, Maize_meteo_year , by="comId")
-    predictData_train_sf
+  #### Combine with Maize_meteo to allow spatial plots later ####
+  Maize_meteo_predicted <- bind_cols( Maize_meteo[ c(1:5,8)],  predict_year_anomaly)
 
-
-    ## Anomaly
-    predictData_train_sf_anomaly_plot  <-
-      ggplot(   predictData_train_sf) +
-      geom_sf(data=vg2500_krs, fill="gray", color="white")  +
-      geom_sf(aes(fill =  predictData_train_sf$siloMaizeAnomaly_predicted ))  +
-      guides(fill = guide_legend(title = "Predicted Yield Anomaly")) +
-      sc_anomaly +
-      ggtitle(paste(listyear[m], modelListNames[i], sep = " - ")) +
-      theme_bw() +
-      theme(plot.title = element_text(hjust = 0.5))
-
-    #### Save the plots ####
-    ggsave(paste("./figures/figures_exploratory/Train/", modelListNames[[i]],  "/Yield_predict_anomaly_", listyear[m],".pdf", sep=""),predictData_train_sf_anomaly_plot , device="pdf", width=8, height= 8)
-    # ggsave(paste("./figures/figures_exploratory/Train/", modelListNames[[i]],  "/Yield_predict_", listyear[m],".pdf", sep=""),     predictData_train_sf_absolut_plot, device="pdf", width=8, height= 8)
-
-} ## End of loop through 17 years in training data
-  
-  
-  ###########################################################################################################################
-  #### Export the data.frame including the maize yield and maize yield deviations (anomalies) of the period 1999 - 2015 ####
+  ########################################################
+  #### Export the data.frame of the predicted values ####
   #########################################################################################################################
   #### Include Model into name of predicted siloMais ####
   names(predict_year_anomaly) <- paste("sMA", modelListNames[i], sep="_")
 
   #### Combine with Maize_meteo ####
-  Maize_meteo <- bind_cols( Maize_meteo,  predict_year_anomaly)
+  result[,i] <-  predict_year_anomaly
+  names(result )[i] <- paste("sMA", modelListNames[i], sep="_")
+
+
+#   ##########################################################################
+#   #### Start loop trough 17 years in training data to make plotted maps ####
+#   
+#   ## Define colors ##
+#   Maize_meteo$siloMaizeAnomaly
+#   summary(Maize_meteo$siloMaizeAnomaly)
+#   myPalette_anomaly <- colorRampPalette((brewer.pal(11, "BrBG")))
+#   sc_anomaly <- scale_fill_gradientn("Yield Deviation", colours = myPalette_anomaly(400), limits=c(- 200, 200))
+#   
+#   for(m in 1:17){
+#     
+#     ## Create data.frame for the year m ##
+#     Maize_meteo_year <- Maize_meteo_predicted %>% select(year:state, siloMaizeAnomaly_predicted ) %>% filter(year == listyear[[m]] )
+#     Maize_meteo_year
+#     
+#     ##############################
+#     #### Plot predicted data ####
+#     ############################
+# 
+#     ####################################
+#     #### Create spatial data.frame #####
+#     predictData_train_sf <- NULL
+#     predictData_train_sf <- inner_join(vg2500_krs, Maize_meteo_year , by="comId")
+#     predictData_train_sf
+# 
+# 
+#     ## Anomaly
+#     predictData_train_sf_anomaly_plot  <-
+#       ggplot(   predictData_train_sf) +
+#       geom_sf(data=vg2500_krs, fill="gray", color="white")  +
+#       geom_sf(aes(fill =  predictData_train_sf$siloMaizeAnomaly_predicted ))  +
+#       guides(fill = guide_legend(title = "Predicted Yield Anomaly")) +
+#       sc_anomaly +
+#       ggtitle(paste(listyear[m], modelListNames[i], sep = " - ")) +
+#       theme_bw() +
+#       theme(plot.title = element_text(hjust = 0.5))
+# 
+#     #### Save the plots ####
+#     ggsave(paste("./figures/figures_exploratory/Train/", modelListNames[[i]],  "/Yield_predict_anomaly_", listyear[m],".pdf", sep=""),predictData_train_sf_anomaly_plot , device="pdf", width=8, height= 8)
+#     # ggsave(paste("./figures/figures_exploratory/Train/", modelListNames[[i]],  "/Yield_predict_", listyear[m],".pdf", sep=""),     predictData_train_sf_absolut_plot, device="pdf", width=8, height= 8)
+# 
+# } ## End of loop through 17 years in training data
+
+  #############################################################
+  #### Greate Maize_meteo_predicted including all modells #### 
+  ###########################################################
+  Maize_meteo_predicted <- bind_cols( Maize_meteo[ c(1:5,8)],  result)
+  
+
 
 } # Close loop through to predictive models
 
 #### Write Maize_meteo including predicted siloMaize Anomalies derived from the models in BaseModel.R ###
-write_csv(Maize_meteo, "./data/data_processed/Maize_meteo_predicted.csv")
+write_csv(Maize_meteo_predicted, "./data/data_processed/Maize_meteo_predicted.csv")
+
+
 
 
 # ##############################################################################################################################################################################################
