@@ -19,7 +19,7 @@
   - Also includes generating demeaned data for the period 1999 - 2015 (except SMI)
   - Input:  YieldMeteo.csv <- Merge_YieldMeteo_Proj2.R
   - Output: Average Yield of each com: avgYield_comId.csv -> /Proj2/data/data_processed/
-            Maize_meteo (data.frame after preparation scheme) -> /Proj2/data/data_processed/
+            Maize_meteo.csv (data.frame after preparation scheme) -> /Proj2/data/data_processed/
 
 5) KlimaMeteo_netcdf_to_sf&tidy.R
   - Input:  Meterological and SMI Data derived from the climate models 
@@ -112,6 +112,26 @@
   - Input: "./data/data_proj/","MeteoMonth_df_tidy_", namelist_RCMs[[i]],".csv" <- KlimaMeteo_netcdf_to_sf&tidy.R
   - Output: - ./figures/figures_exploratory/Proj/SMI/oneAndZero_table.csv
             - ./figures/figures_exploratory/Proj/SMI/zeroAndOne_namelist*.pdf
+
+3) Scatterplots.R
+  a) Density Plots (Smoothed Histograms) of of observed and fitted maize yield for time period 1999 - 2015 for the models in BaseModel.R and the standard model 
+  with 
+  b) Scatterplot of observed and fitted maize yield for time period 1999 - 2015 -> one for each predictive model, also conditional on state
+  c) Scatterplot of time period 1999 - 2015 of simulated data based on inputs derived from RCMs against observed data - colors by RCMS / States
+  d) Density Plots  of time period 1999 - 2015 of simulated data based on inputs derived from RCMs against observed data - color conditional on RCMs
+  e) Scatterplot of subsets of time period 1971 - 2000 in simulateddata based on inputs derived from RCMs against observed data for 1999 - 2015, 
+  colors by RCMS or States 
+  f) Density Plots of subsets of time period 1971 - 2000 in simulated data based on inputs derived from RCMs against observed data for 1999 - 2015, 
+  colors by RCMS or States 
+  
+  - Density Plots can be found in /Proj2/figures/figures_exploratory/DensityPlots
+  - Scatterplots can be found in /Proj2/figures/figures_exploratory/Scatterplots
+  
+  Inputs:
+  - siloMaize_obs <- read_csv("./data/data_processed/Maize_meteo.csv")
+  - siloMaize_sim_train <-  read_csv( "./data/data_processed/Maize_meteo_predicted.csv") <- BaseModel_Predicton.R
+  - siloMaize_sim_climate_all <-  read_csv("./data/data_proj/output/Climate_predicted_allRCMs.csv") <- Prediction_projections.R
+  
 
 '
 
