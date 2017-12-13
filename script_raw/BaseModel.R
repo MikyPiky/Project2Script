@@ -133,7 +133,7 @@ lm.fit_SMI_6_Jun_Aug_anomaly_demean <- lm(siloMaizeAnomaly ~
 
 summary(lm.fit_SMI_6_Jun_Aug_anomaly_demean )
 par(mfrow=c(2,2))
-plot(lm.fit_SMI_6_Jun_Aug_anomaly_demean, which=c(1:4))
+# plot(lm.fit_SMI_6_Jun_Aug_anomaly_demean, which=c(1:4))
 
 
 # ## Cross Validate to derive out of sample adjusted R² ##
@@ -197,7 +197,7 @@ bestModelDredgeBIC_anomaly_demean <- lm(formula = siloMaizeAnomaly ~
                                           SMI_Jun6 + 1
                                         , data = Maize_meteo)
 summary(bestModelDredgeBIC_anomaly_demean)
-plot(bestModelDredgeBIC_anomaly_demean, main="bestModelDredgeBIC")
+# plot(bestModelDredgeBIC_anomaly_demean, main="bestModelDredgeBIC")
 
 # ## Best model derived via dredge model subset selection based on BIC, comId ##
 # bestModelDredgeBIC_anomaly_demean_comId <- lm(formula = siloMaizeAnomaly ~ 
@@ -252,9 +252,9 @@ model_mgcv_BASE <-  gam(siloMaizeAnomaly ~
 summary(model_mgcv_BASE)
 
 ## Take a look at check plot and plotmo ##
-par(mfrow=c(2,2))
-gam.check(model_mgcv_BASE)
-plotmo(model_mgcv_BASE , level = 0.95, ylim =c(-200, 150))
+# par(mfrow=c(2,2))
+# gam.check(model_mgcv_BASE)
+# plotmo(model_mgcv_BASE , level = 0.95, ylim =c(-200, 150))
 
 
 ## best mgcv model without interaction ##
@@ -274,9 +274,9 @@ model_mgcv_bestEARTH_noInteraction_T <-  gam(siloMaizeAnomaly ~
 summary(model_mgcv_bestEARTH_noInteraction_T)
 
 ## Take a look at check plot and plotmo ##
-par(mfrow=c(2,2))
-gam.check(model_mgcv_bestEARTH_noInteraction_T )
-plotmo(model_mgcv_bestEARTH_noInteraction_T  , level = 0.95, ylim =c(-200, 150))
+# par(mfrow=c(2,2))
+# gam.check(model_mgcv_bestEARTH_noInteraction_T )
+# plotmo(model_mgcv_bestEARTH_noInteraction_T  , level = 0.95, ylim =c(-200, 150))
 
 
 #################################################################################################################

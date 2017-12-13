@@ -240,11 +240,11 @@ pMeanMinusMean_plot <-
   theme_minimal(base_size = 14) +  
   theme(legend.position="none")  + 
   scale_fill_brewer(palette="Greys")  +
-  ggtitle(paste(nameList_climate[[i]])) + 
+  # ggtitle(paste(nameList_climate[[i]]))  +
   ylab("Mean(Y) of climate period - Mean(Y) of reference period") + 
   xlab("Climate Period") +
-  scale_y_continuous(limits=c(-150, 50))  + 
-  theme_bw() + 
+  scale_y_continuous(limits=c(-80, 50))  + 
+  theme_minimal() + 
   theme(plot.title = element_text(hjust = 0.5)) + 
   guides(fill=FALSE)
 
@@ -267,11 +267,11 @@ pLevelMinusMean_plot <-  pLevelMinusMean + geom_hline(yintercept=0, color="gray"
   theme_minimal(base_size = 14) + 
   theme(legend.position="none", axis.text.y = element_text(size = 15)) + 
   scale_fill_brewer(palette="Greys") +
-  ggtitle(paste(nameList_climate[[i]])) + 
+  # ggtitle(paste(nameList_climate[[i]])) + 
   ylab("Y of climate period - Mean(Y) of reference period ") + 
   xlab("Climate Period") +
   scale_y_continuous(limits=c(-500, 500))  + 
-  theme_bw() + 
+  theme_minimal() + 
   theme(plot.title = element_text(hjust = 0.5)) + 
   guides(fill=FALSE)
 
@@ -290,11 +290,11 @@ pLevelMinusMean_plot <-  pLevelMinusMean + geom_hline(yintercept=0, color="gray"
   theme_minimal(base_size = 14) + 
   theme(legend.position="none", axis.text.y = element_text(size = 15)) + 
   scale_fill_brewer(palette="Greys") +
-  ggtitle(paste(nameList_climate[[i]])) + 
+  # ggtitle(paste(nameList_climate[[i]])) + 
   ylab("Y of climate period - Mean(Y) of reference period ") + 
   xlab("Climate Period") +
   # scale_y_continuous(limits=c(-500, 500))  + 
-  theme_bw() + 
+  theme_minimal() +  
   theme(plot.title = element_text(hjust = 0.5)) + 
   guides(fill=FALSE)
 
@@ -313,11 +313,11 @@ pLevelMinusLevel_plot <- pLevelMinusLevel +
   stat_summary(fun.data=data_summary, color="orange")  + 
   theme_minimal(base_size = 14) +  theme(legend.position="none", axis.text.y = element_text(size = 15)) + 
   scale_fill_brewer(palette="Greys")  +
-  ggtitle(paste(nameList_climate[[i]])) + 
+  # ggtitle(paste(nameList_climate[[i]])) + 
   ylab("Y of climate period - Y of reference period ") + 
   xlab("Climate Period") +
   # scale_y_continuous(limits=c(-1000, 500))  +
-  theme_bw() + 
+  theme_minimal() +  
   theme(plot.title = element_text(hjust = 0.5)) + 
   guides(fill=FALSE)
 

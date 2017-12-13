@@ -316,7 +316,7 @@ for (r in seq_along(modelListNames)){
    
       #### Drop rows with NAs ####
       Maize_merge <- na.omit(siloMaize_obs_merge)
-      
+      Maize_merge
       ##################################
       #### Sort yield anomaly data ####
       ################################
@@ -327,6 +327,8 @@ for (r in seq_along(modelListNames)){
       siloMaize_sim_sorted <- as.tibble(sort(Maize_merge[[2]]))
       names(siloMaize_sim_sorted) <- "Silage Maize Predicted"
       siloMaize_sim_sorted
+      head( siloMaize_sim_sorted)
+      tail( siloMaize_sim_sorted)
       
       ##############################
       #### Sort siloMaize_obs_merge ####
@@ -334,6 +336,9 @@ for (r in seq_along(modelListNames)){
 
       names( siloMaize_obs_sorted ) <- "Silage Maize Observed"
       siloMaize_obs_sorted 
+      
+      head( siloMaize_obs_sorted)
+      tail( siloMaize_obs_sorted)
       
       #####################################################
       #### Cbind siloMaize_obs_sorted and siloMaize_sim_sorted ####

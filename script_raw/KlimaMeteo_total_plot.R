@@ -21,12 +21,12 @@ Here I look at plots which average over all climate models ("MPI","DMI","KNMI","
     - SMI in July
     - SMI in August
 
-    Plot of absolute values (same for Mean and SD)  for each climate period 
-    - T in July
-    - P in July 
-    - SMI in June
-    - SMI in July
-    - SMI in August
+    # Plot of absolute values (same for Mean and SD)  for each climate period 
+    # - T in July
+    # - P in July 
+    # - SMI in June
+    # - SMI in July
+    # - SMI in August
 '
 
 #### Output ####
@@ -42,31 +42,7 @@ Here I look at plots which average over all climate models ("MPI","DMI","KNMI","
 '
 
 #### Packages ####
-library(sp)
-library(rgdal)
-library(raster)
-library(rasterVis)
-library(maptools)
-library(plyr)
-library(ncdf4)
-library(zoo)
-library(foreign)
-library(maps)
-library(colorspace)
-library(lattice)
-library(stringr)
-library(DataCombine)
-library(reshape2)
-library(sf)
-library(dplyr)
-library(readr)
-library(tidyverse)
-library(ggplot2)
-library(ggthemes)
-library(gridExtra)
-library(cowplot)
-library(grid)
-library(stargazer)
+source
 
 
 ################################################################################################################################################################################
