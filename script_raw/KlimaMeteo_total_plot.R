@@ -42,7 +42,8 @@ Here I look at plots which average over all climate models ("MPI","DMI","KNMI","
 '
 
 #### Packages ####
-source
+# source("script/script_raw/Packages.R")
+source("script/script_raw/BaseModel.R")
 
 
 ################################################################################################################################################################################
@@ -58,30 +59,14 @@ vg2500_krs$RS <- as.integer(str_sub(vg2500_krs$RS, 1,5))
 vg2500_krs$RS
 
 ## Create List ##
-namelist_models <- c("DMI","ICTP", "KNMI","MPI","SMHI")
 # MeteoMonth_df_tidy <- list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMHI=list())
 
 
 ##########################################################################################################
 #### Combine the Meteo_df_tidy data.frames to one large data.frame including a column for the models ####
 ########################################################################################################
-## Create list to read in the five model data.frames ##
-MeteoMonth_df_tidy_list <- list(MeteoMonth_df_tidy_summaries_MPI = data.frame(), MeteoMonth_df_tidy_DMI= data.frame(),
-                                MeteoMonth_df_tidy_KNMI= data.frame(), MeteoMonth_df_tidy_ICTP = data.frame(), MeteoMonth_df_tidy_SMHI = data.frame())
-
-#### Read in the tidy data frames of each model ####
-for (l in 1:5){
-  MeteoMonth_df_tidy_list[[l]]<- read.csv(paste("./data/data_proj/","MeteoMonth_df_tidy_", namelist_models[[l]],".csv", sep=""))
-  MeteoMonth_df_tidy_list[[l]]$X <- NULL
-  MeteoMonth_df_tidy_list[[l]]$model <- as.factor( rep(paste(namelist_models[[l]]), dim(MeteoMonth_df_tidy_list[[l]])[[1]] ) )
-}
-# summary(MeteoMonth_df_tidy)
-str(MeteoMonth_df_tidy_list[[1]])
-
-#### Combine data.frame ####
-MeteoMonth_df_tidy_total <- rbind(rbind(rbind(rbind( MeteoMonth_df_tidy_list[[1]],  MeteoMonth_df_tidy_list[[2]]),  MeteoMonth_df_tidy_list[[3]]),  MeteoMonth_df_tidy_list[[4]]),  MeteoMonth_df_tidy_list[[5]])
-str(MeteoMonth_df_tidy_total)
-
+MeteoMonth_df_tidy_total <- read_csv("./data/data_proj/output/Climate_predicted_allRCMs.csv")
+MeteoMonth_df_tidy_total
 #############################################################################################################################
 #### Loop to create Means and SD of the absolute values for the climate periods (1971 - 2000, 2021 - 2050, 2070 - 2099) ####
 ###########################################################################################################################
@@ -109,20 +94,20 @@ for (i in 1:3){
     summarise_all(.funs = c(Mean = "mean", Sd= "sd"))
   
   #### Merge with Spatial Information ####
-  MeteoMonth_df_tidy_summaries_total_sf_list[[i]] <- merge(vg2500_krs, MeteoMonth_df_tidy_summaries_total_list[[i]], by.x = "RS", by.y = "comId", all.x, sort=F) 
+  MeteoMonth_df_tidy_summaries_total_sf_list[[i]] <- inner_join(vg2500_krs, MeteoMonth_df_tidy_summaries_total_list[[i]], by=c("RS"= "comId")) 
   
 } ## End of loop
 str(MeteoMonth_df_tidy_summaries_total_list[[i]])
-
+MeteoMonth_df_tidy_summaries_total_list[[i]]
 
 ##################################################################################################################################
 #### Create differences in between the reference climate period (1971 - 2000) and the projections (2021 - 2050, 2070 - 2099) ####
 ################################################################################################################################
-names(MeteoMonth_df_tidy_summaries_total_list[[2]][,3:105])
+names(MeteoMonth_df_tidy_summaries_total_list[[2]])
 
-MeteoMonth_df_tidy_summaries_total_diff2021 <- MeteoMonth_df_tidy_summaries_total_list[[2]][,3:105] - MeteoMonth_df_tidy_summaries_total_list[[1]][,3:105]
-MeteoMonth_df_tidy_summaries_total_diff2070 <- MeteoMonth_df_tidy_summaries_total_list[[3]][,3:105] - MeteoMonth_df_tidy_summaries_total_list[[1]][,3:105]
-str(MeteoMonth_df_tidy_summaries_total_diff2021)
+MeteoMonth_df_tidy_summaries_total_diff2021 <- as.tibble(MeteoMonth_df_tidy_summaries_total_list[[2]] - MeteoMonth_df_tidy_summaries_total_list[[1]])
+MeteoMonth_df_tidy_summaries_total_diff2070 <- as.tibble(MeteoMonth_df_tidy_summaries_total_list[[3]] - MeteoMonth_df_tidy_summaries_total_list[[1]])
+MeteoMonth_df_tidy_summaries_total_diff2021
 
 MeteoMonth_df_tidy_summaries_total_diff2021$comId <- MeteoMonth_df_tidy_summaries_total_list[[2]]$comId
 MeteoMonth_df_tidy_summaries_total_diff2070$comId <- MeteoMonth_df_tidy_summaries_total_list[[2]]$comId
@@ -133,13 +118,12 @@ summary(MeteoMonth_df_tidy_summaries_total_diff2070)
 
 ##########################################################################
 #### Merge difference data with vg2500_krs to get Spatial Attributes ####
-MeteoMonth_df_tidy_summaries_total_diff2021_sf <- merge(vg2500_krs, MeteoMonth_df_tidy_summaries_total_diff2021, by.x = "RS", by.y = "comId", all.x, sort=F)
-MeteoMonth_df_tidy_summaries_total_diff2070_sf <- merge(vg2500_krs, MeteoMonth_df_tidy_summaries_total_diff2070, by.x = "RS", by.y = "comId", all.x, sort=F)
+MeteoMonth_df_tidy_summaries_total_diff2021_sf <-  inner_join(vg2500_krs, MeteoMonth_df_tidy_summaries_total_diff2021, by = c("RS" = "comId"))
+MeteoMonth_df_tidy_summaries_total_diff2070_sf <-  inner_join(vg2500_krs, MeteoMonth_df_tidy_summaries_total_diff2070, by = c("RS" = "comId"))
 
 MeteoMonth_df_tidy_summaries_total_diff2021_sf$RS ## order of vg2500_krs is kept (sort=F)
 
-str(MeteoMonth_df_tidy_summaries_total_diff2021_sf)
-
+MeteoMonth_df_tidy_summaries_total_diff2021_sf
 summary(MeteoMonth_df_tidy_summaries_total_diff2070_sf)
 
 ####################################
@@ -185,18 +169,19 @@ title <- textGrob("All RCMs", gp=gpar(fontface="bold"))
 ######################################################
 
 ## Define colorRamp for July Temperature ##
-summary(MeteoMonth_df_tidy_summaries_total_diff2070_sf$T_Jul_Mean)
-summary(MeteoMonth_df_tidy_summaries_total_diff2021_sf$T_Jul_Mean)
+summary(MeteoMonth_df_tidy_summaries_total_diff2070_sf$T_Jul_demeaned_Mean)
+summary(MeteoMonth_df_tidy_summaries_total_diff2021_sf$T_Jul_demeaned_Mean)
 
-myPalette <- colorRampPalette((brewer.pal(9, "Reds")))
-sc <- scale_fill_gradientn("July Temp.", colours = myPalette(100), limits=c(0, 5))
+myPalette <- colorRampPalette((rev(brewer.pal(9, "RdBu"))))
+sc <-  scale_fill_gradientn("July Temp.", colours = myPalette(100), limits=c(-3.8, 3.8))
 
 
 #### (2070-2099) - (1971-2000) ####
 plot_mean_total_diff2070_TJul <-
   ggplot(MeteoMonth_df_tidy_summaries_total_diff2070_sf) +
-  geom_sf(aes(fill = T_Jul_Mean)) +
-  ggtitle("Mean: (2070-2099) - (1971-2000) ") + sc +
+  geom_sf(aes(fill = T_Jul_demeaned_Mean)) +
+  ggtitle("Mean: (2070-2099) - (1971-2000) ") +
+  # sc +
   theme_bw()
 # plot_mean_total_diff2070_TJul
 
@@ -204,7 +189,7 @@ plot_mean_total_diff2070_TJul <-
 #### (2021-2050) - (1971-2000) ####
 plot_mean_total_diff2021_TJul <-
   ggplot(MeteoMonth_df_tidy_summaries_total_diff2021_sf) +
-  geom_sf(aes(fill = T_Jul_Mean)) +
+  geom_sf(aes(fill = T_Jul_demeaned_Mean)) +
   ggtitle("Mean: (2021-2050) - (1971-2000)")  + sc +
   theme_bw()
 # plot_mean_total_diff2021_TJul
@@ -221,8 +206,8 @@ plot_mean_total_diff_TJul <- grid.arrange(plot_mean_total_diff2021_TJul, plot_me
 ###################################################################
 
 ## Define colorRamp for July Temperature 
-summary(MeteoMonth_df_tidy_summaries_total_diff2070_sf$P_Jul_Mean)
-summary(MeteoMonth_df_tidy_summaries_total_diff2021_sf$P_Jul_Mean)
+summary(MeteoMonth_df_tidy_summaries_total_diff2070_sf$P_Jul_demeaned_Mean)
+summary(MeteoMonth_df_tidy_summaries_total_diff2021_sf$P_Jul_demeaned_Mean)
 
 myPalette <- colorRampPalette((brewer.pal(11, "PuOr")))
 sc <- scale_fill_gradientn("July Pc.",colours = myPalette(100), limits=c(-55, 55))
@@ -231,7 +216,7 @@ sc <- scale_fill_gradientn("July Pc.",colours = myPalette(100), limits=c(-55, 55
 #### (2070-2099) - (1971-2000) ####
 plot_mean_total_diff2070_PJul <-
   ggplot(MeteoMonth_df_tidy_summaries_total_diff2070_sf) +
-  geom_sf(aes(fill = P_Jul_Mean)) +
+  geom_sf(aes(fill = P_Jul_demeaned_Mean)) +
   ggtitle("Mean: (2070-2099) - (1971-2000) ") + sc +
   theme_bw()
 # plot_mean_total_diff2070_PJul
@@ -240,7 +225,7 @@ plot_mean_total_diff2070_PJul <-
 #### (2021-2050) - (1971-2000) ####
 plot_mean_total_diff2021_PJul <-
   ggplot(MeteoMonth_df_tidy_summaries_total_diff2021_sf) +
-  geom_sf(aes(fill = P_Jul_Mean)) +
+  geom_sf(aes(fill = P_Jul_demeaned_Mean)) +
   ggtitle("Mean: (2021-2050) - (1971-2000)")  + sc +
   theme_bw()
 # plot_mean_total_diff2021_PJul
@@ -369,9 +354,9 @@ Plot of absolute values (Mean)  for each climate period
 
 ## Define colorRamp ##
 str(MeteoMonth_df_tidy_summaries_total_sf_list,1)
-summary(MeteoMonth_df_tidy_summaries_total_sf_list [[1]]$T_Jul_Mean)
-summary(MeteoMonth_df_tidy_summaries_total_sf_list [[2]]$T_Jul_Mean)
-summary(MeteoMonth_df_tidy_summaries_total_sf_list [[3]]$T_Jul_Mean)
+summary(MeteoMonth_df_tidy_summaries_total_sf_list [[1]]$T_Jul_demeaned_Mean)
+summary(MeteoMonth_df_tidy_summaries_total_sf_list [[2]]$T_Jul_demeaned_Mean)
+summary(MeteoMonth_df_tidy_summaries_total_sf_list [[3]]$T_Jul_demeaned_Mean)
 
 
 myPalette <- colorRampPalette((brewer.pal(9, "RdPu")))
@@ -380,7 +365,7 @@ sc <- scale_fill_gradientn("July Temp.",colours = myPalette(100), limits=c(11, 2
 ## Plot Mean: 1970 - 2000 - T July ##
 plot_mean_total_1970_TJul <-
   ggplot(MeteoMonth_df_tidy_summaries_total_sf_list [[1]]) +
-  geom_sf(aes(fill = T_Jul_Mean)) +
+  geom_sf(aes(fill = T_Jul_demeaned_Mean)) +
   ggtitle("Mean: 1970 - 2000") + sc +
   theme_bw()
 
@@ -389,7 +374,7 @@ plot_mean_total_1970_TJul <-
 ## Plot Mean: 2021 - 2050 - T July ##
 plot_mean_total_2021_TJul <-
   ggplot(MeteoMonth_df_tidy_summaries_total_sf_list [[2]]) +
-  geom_sf(aes(fill = T_Jul_Mean)) +
+  geom_sf(aes(fill = T_Jul_demeaned_Mean)) +
   ggtitle("Mean: 2021 - 2050") + sc +
   theme_bw()
 
@@ -398,7 +383,7 @@ plot_mean_total_2021_TJul <-
 ## Plot Mean: 2070 - 2099 - T July ##
 plot_mean_total_2070_TJul <-
   ggplot(MeteoMonth_df_tidy_summaries_total_sf_list [[3]]) +
-  geom_sf(aes(fill = T_Jul_Mean)) +
+  geom_sf(aes(fill = T_Jul_demeaned_Mean)) +
   ggtitle("Mean: 2070 - 2099") + sc +
   theme_bw()
 
@@ -415,9 +400,9 @@ plot_mean_TJul <- grid.arrange(plot_mean_total_1970_TJul, plot_mean_total_2021_T
 
 ## Define colorRamp ##
 str(MeteoMonth_df_tidy_summaries_total_sf_list,1)
-summary(MeteoMonth_df_tidy_summaries_total_sf_list [[1]]$P_Jul_Mean)
-summary(MeteoMonth_df_tidy_summaries_total_sf_list [[2]]$P_Jul_Mean)
-summary(MeteoMonth_df_tidy_summaries_total_sf_list [[3]]$P_Jul_Mean)
+summary(MeteoMonth_df_tidy_summaries_total_sf_list [[1]]$P_Jul_demeaned_Mean)
+summary(MeteoMonth_df_tidy_summaries_total_sf_list [[2]]$P_Jul_demeaned_Mean)
+summary(MeteoMonth_df_tidy_summaries_total_sf_list [[3]]$P_Jul_demeaned_Mean)
 
 
 myPalette <- colorRampPalette((brewer.pal(9, "PuBu")))
@@ -426,7 +411,7 @@ sc <- scale_fill_gradientn("July Pc.",colours = myPalette(100), limits=c(20, 220
 ## Plot Mean: 1970 - 2000 - T July ##
 plot_mean_total_1970_PJul <-
   ggplot(MeteoMonth_df_tidy_summaries_total_sf_list [[1]]) +
-  geom_sf(aes(fill = P_Jul_Mean)) +
+  geom_sf(aes(fill = P_Jul_demeaned_Mean)) +
   ggtitle("Mean: 1970 - 2000") + sc +
   theme_bw()
 
@@ -435,7 +420,7 @@ plot_mean_total_1970_PJul <-
 ## Plot Mean: 2021 - 2050 - T July ##
 plot_mean_total_2021_PJul <-
   ggplot(MeteoMonth_df_tidy_summaries_total_sf_list [[2]]) +
-  geom_sf(aes(fill = P_Jul_Mean)) +
+  geom_sf(aes(fill = P_Jul_demeaned_Mean)) +
   ggtitle("Mean: 2021 - 2050") + sc +
   theme_bw()
 
@@ -444,7 +429,7 @@ plot_mean_total_2021_PJul <-
 ## Plot Mean: 2070 - 2099 - T July ##
 plot_mean_total_2070_PJul <-
   ggplot(MeteoMonth_df_tidy_summaries_total_sf_list [[3]]) +
-  geom_sf(aes(fill = P_Jul_Mean)) +
+  geom_sf(aes(fill = P_Jul_demeaned_Mean)) +
   ggtitle("Mean: 2070 - 2099") + sc +
   theme_bw()
 
