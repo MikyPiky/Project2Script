@@ -82,6 +82,7 @@ plot_mean_1971_list <- plot_mean_diff2021_list <-plot_mean_diff2070_list <- plot
 
 't indexes RCMs, s indexes prediction models'
 
+t = s= 1
 #############################################
 #### Loop through all 5 climate models  ####
 ###########################################
@@ -125,7 +126,7 @@ for (t in seq_along(namelist_RCMs)){
     
     
     #### Merge with Spatial Information ####
-    Climate_predicted_summaries_sf_list[[r]] <- inner_join(vg2500_krs, Climate_predicted_summaries_list[[r]], by = "comId") 
+    Climate_predicted_summaries_sf_list[[r]] <- inner_join(vg2500_krs, Climate_predicted_summaries_list[[r]], by = c("comId")  )
     
   }
   
@@ -152,9 +153,8 @@ for (t in seq_along(namelist_RCMs)){
   Climate_predicted_summaries_diff2070$comId <- Climate_predicted_summaries_list[[2]]$comId
   
   #### Merge difference data with vg2500_krs to get Spatial Attributes ####
-  Climate_predicted_summaries_diff2021_sf <- inner_join(vg2500_krs, Climate_predicted_summaries_diff2021 , by = "comId", sort=T) 
-  Climate_predicted_summaries_diff2070_sf <- inner_join(vg2500_krs, Climate_predicted_summaries_diff2070 , by = "comId", sort=T) 
-  
+  Climate_predicted_summaries_diff2021_sf <- inner_join(vg2500_krs, Climate_predicted_summaries_diff2021 , by = c( "comId")  )
+  Climate_predicted_summaries_diff2070_sf <- inner_join(vg2500_krs, Climate_predicted_summaries_diff2070 , by = c( "comId")  )
   
   ' The diff. data for Y and Y_anomaly are the same. By differencing the comId specific mean disappears by the means of the substraction, since 
     Y_anomaly =  Y - mean(Y of comId between 1999 and 2015), where Y is time dependent but mean(Y of comId between 1999 and 2015 is a constant) '
@@ -189,7 +189,8 @@ for (t in seq_along(namelist_RCMs)){
   ##################################################
   ### Start of loop trough predictive models s ####
   ################################################
-  for (s in seq_along(nameList_climate))
+  # seq_along(nameList_climate)
+  for (s in 1:1)
     {
   
     # ###################################################
@@ -327,7 +328,7 @@ for (t in seq_along(namelist_RCMs)){
     Climate_predicted_summaries_diff2070_sf %>% select(contains("sMA")) %>% select(contains("_mean")) %>% summary()
     
     myPalette <- colorRampPalette((brewer.pal(11, "BrBG")))
-    sc <- scale_fill_gradientn("Yield Anomaly", colours = myPalette(100),  limits=c(-70, 70))
+    sc <- scale_fill_gradientn("dt/ha", colours = myPalette(100),  limits=c(-70, 70))
     
     #### Plot Difference of Mean (2070-2099) - (1971-2000) ####
     plot_mean_diff2070_Y <-
@@ -335,10 +336,12 @@ for (t in seq_along(namelist_RCMs)){
       geom_sf(data=vg2500_krs, fill="gray", color="white")  +
       geom_sf(aes_string(fill = nameList_climate_sMA_mean[[s]] )) +
       # ggtitle(paste( nameList_climate_yield[[s]],", Mean (2070-2099) - (1971-2000) ", sep="")) +
-      ggtitle(paste( "Mean: (2070-2099) - (1971-2000)", sep="")) +
-      
       sc +
-      theme_bw() +       
+      ggtitle(paste(namelist_RCMs[[t]], "2070-2099" , sep=", ")) +
+      theme_bw() +    
+      theme(legend.position="none") +
+      theme(legend.title = element_blank()) +
+      theme(title = element_text(color="black") ) +
       theme(plot.title = element_text(hjust = 0.5))
     
     # plot_mean_diff2070_Y
@@ -352,17 +355,18 @@ for (t in seq_along(namelist_RCMs)){
       geom_sf(data=vg2500_krs, fill="gray", color="white")  +
       geom_sf(aes_string(fill = nameList_climate_sMA_mean[[s]] )) +
       # ggtitle(paste( nameList_climate_yield[[s]],", Mean (2021-2050) - (1971-2000)", sep=""))  + 
-      ggtitle(paste("Mean: (2021-2050) - (1971-2000)", sep="")) +
       sc +
-      theme_bw() +       
+      ggtitle(paste(namelist_RCMs[[t]], "2021-2050" , sep=", ")) +
+      theme_bw() +   
+      theme(legend.position="none") +
+      # theme(legend.title = element_blank()) +
+      theme(title = element_text(color="black") ) +
       theme(plot.title = element_text(hjust = 0.5))
     
-    # plot_mean_diff2021_Y
-    
-    
+ 
     ## Store to allow combined plots
     plot_mean_diff2021_list[[s]][[t]] <-   plot_mean_diff2021_Y
-    
+
     plot_mean_diff_Y <- grid.arrange(plot_mean_diff2021_Y, plot_mean_diff2070_Y, ncol=2, 
                                      top = textGrob(paste(namelist_RCMs[[t]], nameList_climate[[s]], sep=" & " ), gp=gpar(fontsize=30)))
     # plot_mean_diff_Y
@@ -370,53 +374,53 @@ for (t in seq_along(namelist_RCMs)){
     ggsave(paste("./figures/figures_exploratory/Proj/", namelist_RCMs[[t]],"/plot_mean_diff_YAnomaly_", nameList_climate[[s]],".pdf", sep=""), 
                     plot = plot_mean_diff_Y, width=14, height=8)
     
-    ###########################################################
-    #### Plot difference in sd of climate periods of YD #####
-    ##########################################################
-    
-    #### Define colorRamp for Y_sd ####
-    Climate_predicted_summaries_diff2021_sf %>% select(contains("sMA")) %>% select(contains("_sd")) %>% summary()
-    Climate_predicted_summaries_diff2070_sf %>% select(contains("sMA")) %>% select(contains("_sd")) %>% summary()
-    myPalette <- colorRampPalette((brewer.pal(11, "PiYG")))
-    sc <- scale_fill_gradientn("Yield Anomaly", colours = myPalette(100), limits=c(-30, 30))
-    'Here I take zero a reference'
-    
-    #### Plot Difference of SD (2070-2099) - (1971-2000) ####
-    plot_sd_diff2070_Y <- 
-      ggplot(Climate_predicted_summaries_diff2070_sf) + 
-      geom_sf(data=vg2500_krs, fill="gray", color="white")  +
-      geom_sf(aes_string(fill = nameList_climate_sMA_sd[[s]] )) +
-      # ggtitle(paste( nameList_climate_yield[[s]],", SD: (2021-2050) - (1971-2000)", sep=""))  + 
-      ggtitle(paste("SD: (2070-2099) - (1971-2000)", sep="")) +
-      sc +
-      theme_bw() +       
-      theme(plot.title = element_text(hjust = 0.5))
-    # plot_sd_diff2070_Y
-    
-    ## Store to allow combined plots
-    plot_sd_diff2070_list[[s]][[t]] <-  plot_sd_diff2070_Y
-    
-    #### Plot Difference of SD (2021-2050) - (1971-2000) ####
-    plot_sd_diff2021_Y <- 
-      ggplot(Climate_predicted_summaries_diff2021_sf) + 
-      geom_sf(data=vg2500_krs, fill="gray", color="white")  +
-      geom_sf(aes_string(fill = nameList_climate_sMA_sd[[s]] )) +
-      # ggtitle(paste( nameList_climate_yield[[s]],", SD: (2021-2050) - (1971-2000)", sep=""))  + 
-      ggtitle(paste("SD: (2070-2099) - (1971-2000)", sep="")) +
-      sc +
-      theme_bw() +       
-      theme(plot.title = element_text(hjust = 0.5))
-    # plot_sd_diff2021_Y
-    
-    ## Store to allow combined plots
-    plot_sd_diff2021_list[[s]][[t]] <-   plot_sd_diff2021_Y
-    
-    plot_sd_diff_Y <- grid.arrange(plot_sd_diff2021_Y, plot_sd_diff2070_Y, ncol=2, 
-                                   top = textGrob(paste(namelist_RCMs[[t]], nameList_climate[[s]], sep=" & " ), gp=gpar(fontsize=30)))
-    # plot_sd_diff_Y
-    
-    ggsave(paste("./figures/figures_exploratory/Proj/", namelist_RCMs[[t]],"/plot_sd_diff_YAnomaly_", nameList_climate[[s]],".pdf", sep=""), 
-                    plot = plot_sd_diff_Y, width=14, height=8)
+    # ###########################################################
+    # #### Plot difference in sd of climate periods of YD #####
+    # ##########################################################
+    # 
+    # #### Define colorRamp for Y_sd ####
+    # Climate_predicted_summaries_diff2021_sf %>% select(contains("sMA")) %>% select(contains("_sd")) %>% summary()
+    # Climate_predicted_summaries_diff2070_sf %>% select(contains("sMA")) %>% select(contains("_sd")) %>% summary()
+    # myPalette <- colorRampPalette((brewer.pal(11, "PiYG")))
+    # sc <- scale_fill_gradientn("Yield Anomaly", colours = myPalette(100), limits=c(-30, 30))
+    # 'Here I take zero a reference'
+    # 
+    # #### Plot Difference of SD (2070-2099) - (1971-2000) ####
+    # plot_sd_diff2070_Y <- 
+    #   ggplot(Climate_predicted_summaries_diff2070_sf) + 
+    #   geom_sf(data=vg2500_krs, fill="gray", color="white")  +
+    #   geom_sf(aes_string(fill = nameList_climate_sMA_sd[[s]] )) +
+    #   # ggtitle(paste( nameList_climate_yield[[s]],", SD: (2021-2050) - (1971-2000)", sep=""))  + 
+    #   ggtitle(paste("SD: (2070-2099) - (1971-2000)", sep="")) +
+    #   sc +
+    #   theme_bw() +       
+    #   theme(plot.title = element_text(hjust = 0.5))
+    # # plot_sd_diff2070_Y
+    # 
+    # ## Store to allow combined plots
+    # plot_sd_diff2070_list[[s]][[t]] <-  plot_sd_diff2070_Y
+    # 
+    # #### Plot Difference of SD (2021-2050) - (1971-2000) ####
+    # plot_sd_diff2021_Y <- 
+    #   ggplot(Climate_predicted_summaries_diff2021_sf) + 
+    #   geom_sf(data=vg2500_krs, fill="gray", color="white")  +
+    #   geom_sf(aes_string(fill = nameList_climate_sMA_sd[[s]] )) +
+    #   # ggtitle(paste( nameList_climate_yield[[s]],", SD: (2021-2050) - (1971-2000)", sep=""))  + 
+    #   ggtitle(paste("SD: (2070-2099) - (1971-2000)", sep="")) +
+    #   sc +
+    #   theme_bw() +       
+    #   theme(plot.title = element_text(hjust = 0.5))
+    # # plot_sd_diff2021_Y
+    # 
+    # ## Store to allow combined plots
+    # plot_sd_diff2021_list[[s]][[t]] <-   plot_sd_diff2021_Y
+    # 
+    # plot_sd_diff_Y <- grid.arrange(plot_sd_diff2021_Y, plot_sd_diff2070_Y, ncol=2, 
+    #                                top = textGrob(paste(namelist_RCMs[[t]], nameList_climate[[s]], sep=" & " ), gp=gpar(fontsize=30)))
+    # # plot_sd_diff_Y
+    # 
+    # ggsave(paste("./figures/figures_exploratory/Proj/", namelist_RCMs[[t]],"/plot_sd_diff_YAnomaly_", nameList_climate[[s]],".pdf", sep=""), 
+    #                 plot = plot_sd_diff_Y, width=14, height=8)
   } # End of loop through predictive models
 } ## End of loop through all five climate models -> index is t
 
