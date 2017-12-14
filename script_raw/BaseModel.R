@@ -413,6 +413,16 @@ nameList_climate_store <- list(
   model_mgcv_BASE                          =  list(DMI=list(),ICTP=list(),KNMI=list(),MPI=list(),SMHIRCA=list())
                             )
 
+nameList_climate_average_store <- list(
+  lm.fit_SMI_6_Jun_Aug_anomaly_demean      =  list(), 
+  lm.fit_SMI_6_Jul_anomaly_demean          =  list(), 
+  # bestModelDredgeBIC_anomaly_demean        =  list(), 
+  # model_earth_noInteraction_T              =  list(), 
+  model_mgcv_bestEARTH_noInteraction_T     =  list(),
+  # model_mgcv_bestEARTH_interaction_ti_T_k3 =  list(),
+  model_mgcv_BASE                          =  list()
+)
+
 
 
 ## list of RCMs ##
