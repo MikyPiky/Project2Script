@@ -52,12 +52,7 @@ source("script/script_raw/BaseModel.R")
 
 ######################################################################################
 #### Laden der Shapes mit den Polygonen der Kreise und deren räumliche Zuordnung ####
-vg2500_krs <- read_sf("./..//Proj1/data//data_spatial/", "vg2500_krs")
-str(vg2500_krs, 2)
-
-#### Change RS to five digits #####
-vg2500_krs$RS <- as.integer(str_sub(vg2500_krs$RS, 1,5))
-vg2500_krs$RS
+' is loaded in BaseMode.R '
 
 ## Create List ##
 # namelist_RCMs <- c("DMI","ICTP", "KNMI","MPI","SMHI", "All RCMs")
@@ -67,53 +62,21 @@ vg2500_krs$RS
 ###########################################################################
 #### Load Meteo_df_tidy data.frames including a column for the models ####
 #########################################################################
-## Create list to read in the five model data.frames ##
-# MeteoMonth_df_tidy_list <- list(MeteoMonth_df_tidy_summaries_MPI = data.frame(), MeteoMonth_df_tidy_DMI= data.frame(),
-#                                 MeteoMonth_df_tidy_KNMI= data.frame(), MeteoMonth_df_tidy_ICTP = data.frame(), MeteoMonth_df_tidy_SMHI = data.frame())
-# 
-# #### Read in the tidy data frames of each model ####
-# for (r in 1:5){
-#   MeteoMonth_df_tidy_list[[l]] <- read.csv(paste("./data/data_proj/","MeteoMonth_df_tidy_", namelist_RCMs[[r]],".csv", sep=""))
-#   MeteoMonth_df_tidy_list[[l]]$X <- NULL
-#   MeteoMonth_df_tidy_list[[l]]$model <- as.factor( rep(paste(namelist_RCMs[[l]]), dim(MeteoMonth_df_tidy_list[[r]])[[1]] ) )
-# }
-# # summary(MeteoMonth_df_tidy)
-# str(MeteoMonth_df_tidy_list[[1]])
-# 
-# #### Combine data.frame ####
-# MeteoMonth_df_tidy_total <- rbind(rbind(rbind(rbind( MeteoMonth_df_tidy_list[[1]],  MeteoMonth_df_tidy_list[[2]]),  MeteoMonth_df_tidy_list[[3]]),  MeteoMonth_df_tidy_list[[4]]),  MeteoMonth_df_tidy_list[[5]])
-# str(MeteoMonth_df_tidy_total)
-# 
-# #### Create factor of all RCMs ####
-# MeteoMonth_df_tidy_total_allRCMs <- MeteoMonth_df_tidy_total 
-# 
-# MeteoMonth_df_tidy_total_allRCMs$model <- as.factor( rep(paste(namelist_RCMs[[6]]), dim(MeteoMonth_df_tidy_total_allRCMs)[1] ) ) 
-#  str(MeteoMonth_df_tidy_total2$model )                                             
-# 
-# #### Combine Data.frame with RCMs and allRCMs data.frame ####
-# MeteoMonth_df_tidy_total <- rbind(MeteoMonth_df_tidy_total, MeteoMonth_df_tidy_total_allRCMs)
-# 
-# rm(MeteoMonth_df_tidy_total_allRCMs)
-
 MeteoMonth_df_tidy_total <- read_csv("./data/data_proj/output/Climate_predicted_allRCMs.csv")
 
-##################################################################
+###################################################################
 #### Make container which stores the results of each loop run ####
-
+myplots <- list()
 #### RCM container ####
-## Mean ##
 ' These containers store the plots of the yield predictions which are needed for the combined plots.'
-plot_mean_diff2070_TJul_list <- list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMHI=list(), AllRCMs=list() )
-plot_mean_diff2070_PJul_list <- list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMHI=list(), AllRCMs=list()  )
-
-plot_mean_diff2070_SMIJun_list <- list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMHI=list(),  AllRCMs=list()  )
-plot_mean_diff2070_SMIAug_list <- list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMHI=list(),  AllRCMs=list()  ) 
-plot_mean_diff2070_SMIJul_list <- list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMHI=list(),  AllRCMs=list()  ) 
+plot_mean_diff2070_TJul_list <- 
+plot_mean_diff2070_PJul_list <- 
+plot_mean_diff2070_SMIJun_list <- 
+plot_mean_diff2070_SMIAug_list <-
+plot_mean_diff2070_SMIJul_list <- list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMHI=list()) 
 
 #### Combine RCM container for the mean and SD ####
-plot_mean_diff2070_list <-  list(TJul = plot_mean_diff2070_TJul_list, PJul = plot_mean_diff2070_PJul_list, SMIJun = plot_mean_diff2070_SMIJun_list, 
-                                SMIAug = plot_mean_diff2070_SMIAug_list, SMIJul = plot_mean_diff2070_SMIJul_list)
-
+plot_mean_diff2070_list <- 
 plot_sd_diff2070_list   <-  list(TJul = plot_mean_diff2070_TJul_list, PJul = plot_mean_diff2070_PJul_list, SMIJun = plot_mean_diff2070_SMIJun_list, 
                                  SMIAug = plot_mean_diff2070_SMIAug_list, SMIJul = plot_mean_diff2070_SMIJul_list)
   
@@ -132,19 +95,244 @@ str(plot_diff2070_list_title)
 plot_diff2070_list <- list(bottomLegend = plot_diff2070_list_title, noLegend = plot_diff2070_list_title)
 str(plot_diff2070_list)
 
-l=4
+###########################################
+#### Define colorRamps of Differences ####
+#########################################
+
+##############
+#### Mean ####
+
+#### Temp July ####
+summary(MeteoMonth_df_tidy_summaries_diff2070_sf$T_Jul_demeaned_Mean)
+summary(MeteoMonth_df_tidy_summaries_diff2021_sf$T_Jul_demeaned_Mean)
+
+myPalette <- colorRampPalette(brewer.pal(9, "Reds"))
+sc_T_Jul_Mean <- scale_fill_gradientn("July Temp.", colours = myPalette(100), limits=c(0,4))
+
+#### Prec July ####
+summary(MeteoMonth_df_tidy_summaries_diff2070_sf$P_Jul_demeaned_Mean)
+summary(MeteoMonth_df_tidy_summaries_diff2021_sf$P_Jul_demeaned_Mean)
+
+myPalette <- colorRampPalette((brewer.pal(11, "PuOr")))
+sc_P_Jul_Mean <- scale_fill_gradientn("July Pc.",colours = myPalette(100), limits=c(-52, 52))
+
+#### June SMI ####
+summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Jun_Mean)
+summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Jun_Mean)
+
+myPalette <- colorRampPalette((brewer.pal(11, "RdBu")))
+sc_SMI_Jun_Mean <- scale_fill_gradientn("June SMI", colours = myPalette(100), limits=c(-0.4, 0.4))
+
+#### July SMI ####
+summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Jul_Mean)
+summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Jul_Mean)
+
+myPalette <- colorRampPalette((brewer.pal(11, "RdBu")))
+sc_SMI_Jul_Mean <- scale_fill_gradientn("July SMI", colours = myPalette(100), limits=c(-0.4, 0.4))
+
+#### August SMI ####
+summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Aug_Mean)
+summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Aug_Mean)
+
+myPalette <- colorRampPalette((brewer.pal(11, "RdBu")))
+sc_SMI_Aug_Mean <- scale_fill_gradientn("August SMI", colours = myPalette(100), limits=c(-0.4, 0.4))
+
+# # ############
+# # #### SD ####
+# 
+# 
+# #### July Temperature ####
+# summary(MeteoMonth_df_tidy_summaries_diff2070_sf$T_Jul_demeaned_Sd)
+# summary(MeteoMonth_df_tidy_summaries_diff2021_sf$T_Jul_demeaned_Sd)
+# 
+# myPalette <- colorRampPalette((brewer.pal(9, "PRGn")))
+# sc_T_Jul_Sd <- scale_fill_gradientn("July Temp.", colours = myPalette(100), limits=c(-0.7, 0.7))
+# 
+# #### July Prec ####
+# summary(MeteoMonth_df_tidy_summaries_diff2070_sf$P_Jul_demeaned_Sd)
+# summary(MeteoMonth_df_tidy_summaries_diff2021_sf$P_Jul_demeaned_Sd)
+# 
+# myPalette <- colorRampPalette((brewer.pal(11, "PRGn")))
+# sc_P_Jul_Sd <- scale_fill_gradientn("July Prec.",colours = myPalette(100), limits=c(-25, 25))
+# 
+# #### June SMI ####
+# summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Jun_Sd)
+# summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Jun_Sd)
+# 
+# myPalette <- colorRampPalette((brewer.pal(11, "PRGn")))
+# sc_SMI_Jun_Sd <- scale_fill_gradientn("June SMI", colours = myPalette(100), limits=c(-0.25, 0.25))
+# 
+# #### July SMI ####
+# summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Jul_Sd)
+# summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Jul_Sd)
+# 
+# myPalette <- colorRampPalette((brewer.pal(11, "PRGn")))
+# sc_SMI_Jul_Sd <- scale_fill_gradientn("July SMI", colours = myPalette(100), limits=c(-0.25, 0.25))
+# 
+# #### August SMI ####
+# summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Aug_Sd)
+# summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Aug_Sd)
+# 
+# myPalette <- colorRampPalette((brewer.pal(11, "PRGn")))
+# sc_SMI_Aug_Sd <- scale_fill_gradientn("August SMI", colours = myPalette(100), limits=c(-0.25, 0.25))
+
+# ################################################
+# #### Define ColorRamps for absolute values ####
+# ##############################################
+# 
+# ##############
+# #### Mean ####
+# 
+# #### T in July ####
+# # str(MeteoMonth_df_tidy_summaries_sf_list,1)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$T_Jul_demeaned_Mean)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$T_Jul_demeaned_Mean)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$T_Jul_demeaned_Mean)
+# 
+# myPalette <- colorRampPalette((brewer.pal(9, "RdPu")))
+# sc_abs_T_Jul_Mean <- scale_fill_gradientn("July Temp.",colours = myPalette(100), limits=c(-2, 2))
+# #   sc_abs_T_Jul_Mean <- scale_fill_gradientn("July Temp.",colours = myPalette(100), limits=c(11, 24))
+# 
+# 
+# #### P in July ####
+# str(MeteoMonth_df_tidy_summaries_sf_list,1)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$P_Jul_demeaned_Mean)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$P_Jul_demeaned_Mean)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$P_Jul_demeaned_Mean)
+# 
+# myPalette <- colorRampPalette((brewer.pal(9, "PuBu")))
+# sc_abs_P_Jul_Mean <- scale_fill_gradientn("July Prec.",colours = myPalette(100), limits=c(-40, 40))
+# 
+# #### SMI  ####
+# ## June
+# str(MeteoMonth_df_tidy_summaries_sf_list,1)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Jun_demeaned_Mean)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Jun_demeaned_Mean)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Jun_demeaned_Mean)
+# 
+# ## July ##
+# str(MeteoMonth_df_tidy_summaries_sf_list,1)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Jul_demeaned_Mean)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Jul_demeaned_Mean)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Jul_demeaned_Mean)
+# 
+# 
+# ## August ##
+# str(MeteoMonth_df_tidy_summaries_sf_list,1)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Aug_demeaned_Mean)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Aug_demeaned_Mean)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Aug_demeaned_Mean)
+# 
+# #### Set common colorRamp for all SMI ####
+# myPalette <- colorRampPalette((brewer.pal(9, "BrBG")))
+# sc_abs_SMI_Mean <- scale_fill_gradientn(colours = myPalette(100), limits=c(0, 1))
+# 
+# ############################
+# #### Standard Deviation ####
+# 
+# ####  T in July ####
+# 
+# str(MeteoMonth_df_tidy_summaries_sf_list,1)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$T_Jul_demeaned_Sd)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$T_Jul_demeaned_Sd)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$T_Jul_demeaned_Sd)
+# 
+# 
+# myPalette <- colorRampPalette((brewer.pal(9, "RdPu")))
+# sc_abs_T_Jul_Sd <- scale_fill_gradientn("July Temp.", colours = myPalette(100), limits=c(0, 2.5))
+# 
+# ####  P in July ####
+# 
+# str(MeteoMonth_df_tidy_summaries_sf_list,1)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$P_Jul_demeaned_Sd)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$P_Jul_demeaned_Sd)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$P_Jul_demeaned_Sd)
+# 
+# myPalette <- colorRampPalette((brewer.pal(9, "PuBu")))
+# sc_abs_P_Jul_Sd <- scale_fill_gradientn("July Prec.",colours = myPalette(100), limits=c(0, 100))
+# 
+# 
+# ####  SMI ####
+#   
+# ## June 
+# str(MeteoMonth_df_tidy_summaries_sf_list,1)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Jun_demeaned_Sd)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Jun_demeaned_Sd)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Jun_demeaned_Sd)
+# 
+# ## July 
+# 
+# str(MeteoMonth_df_tidy_summaries_sf_list,1)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Jul_demeaned_Sd)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Jul_demeaned_Sd)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Jul_demeaned_Sd)
+# 
+# ## August 
+# 
+# str(MeteoMonth_df_tidy_summaries_sf_list,1)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Aug_Sd)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Aug_Sd)
+# summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Aug_Sd)
+# 
+# 
+# ## Set shared colorRamp for all SMI ## 
+# myPalette <- colorRampPalette((brewer.pal(9, "GnBu")))
+# sc_abs_SMI_Sd <- scale_fill_gradientn(colours = myPalette(100), limits=c(0.1, 0.4))
+
+
+#############################################
+#### Create Variables used in the loops ####
+###########################################
+
+###########################################
+#### Faktor to accaunt for Mean and SD ####
+Mean_Fac <- 5
+Sd_Fac <- 10
+
+##########################################
+#### Create list of variables to plot ####
+## Lidt of colorRamps ##
+list_sc <- c( sc_T_Jul_Mean, sc_P_Jul_Mean, sc_SMI_Jun_Mean, sc_SMI_Jul_Mean, sc_SMI_Aug_Mean)
+# ,               sc_T_Jul_Sd, sc_P_Jul_Sd, sc_SMI_Jun_Sd, sc_SMI_Jul_Sd, sc_SMI_Aug_Sd)
+# list_sc_abs <- c( sc_abs_T_Jul_Mean, sc_abs_P_Jul_Mean, sc_abs_SMI_Mean, sc_abs_SMI_Mean, sc_abs_SMI_Mean,
+#                   sc_abs_T_Jul_Sd, sc_abs_P_Jul_Sd, sc_abs_SMI_Sd, sc_abs_SMI_Sd, sc_abs_SMI_Sd)
+
+list_statistic <- c("Mean", "Standard Deviation")
+list_statistic_export <- c("Mean", "StandardDeviation")
+
+list_statistics_Fac <- c(Mean_Fac, Sd_Fac)
+list_sc_Fac <- c(0,5)
+list_variableName <-c("July Temp.", "July Prec.", "June SMI", "July SMI", "Aug. SMI")
+list_variableName_export <-c("July_Temp", "July_Prec", "June_SMI", "July_SMI", "Aug_SMI")
+list_legend_Variables <- c("none", "bottom")
+list_legend_export <- c("noLegend", "legend")
+
+list_titleVariables <- list(element_text(color="white") , element_text(color="black") )
+list_title_export <- list("noTitle", "title")
+
+######################
+#### Start Loops ####
+####################
+
+## Variables for Statistics used: 1 = Mean, 2 = SD
+g = 1 # Mean
+## Variables for notitle of title: 1 = no title, 2 = title
+n = 2 # title
+## Variablles for no legend of legend ##
+k = 2 # legend
+
+# m is for Variable used, t is for RCM
+
+
+# seq_along(namelist_RCMs)
 ###########################################
 #### Loop through all 5 climate models ####
-for (l in seq_along(namelist_RCMs)){
-  
-  #### Preperation for loop ####
-  
-  # ## Create output directories ##
-  # dir.create(paste("./figures/figures_exploratory/Proj/MeteoVar/", namelist_RCMs[[l]], sep=""), showWarnings = F)
-  
+for (t in seq_along(namelist_RCMs))
+  local({
+  t <- t
   ## Read in the tidy data frames ##
-  MeteoMonth_df_tidy <- MeteoMonth_df_tidy_total %>% filter(RCM == namelist_RCMs[[l]]) %>% select_if(is.numeric)
-  # print(unique(MeteoMonth_df_tidy$RCM))
+  MeteoMonth_df_tidy <- MeteoMonth_df_tidy_total %>% filter(RCM == namelist_RCMs[[t]])
+  print(unique(MeteoMonth_df_tidy$RCM))
   # summary(MeteoMonth_df_tidy)
   # str(MeteoMonth_df_tidy)
   # str(MeteoMonth_df_tidy_total)
@@ -168,11 +356,13 @@ for (l in seq_along(namelist_RCMs)){
     MeteoMonth_df_tidy_summaries_list[[i]] <- MeteoMonth_df_tidy %>%  
       filter(year >=  climateyears_list[[1]][i] & year <= climateyears_list[[2]][i]) %>% 
       group_by(comId) %>%
+     select_if(is.numeric)  %>% 
       summarise_all(.funs = c (Mean="mean", Sd="sd"))
     #### Merge with Spatial Information ####
-    MeteoMonth_df_tidy_summaries_sf_list[[i]] <- merge(vg2500_krs, MeteoMonth_df_tidy_summaries_list[[i]], by.x = "RS", by.y = "comId", all.x, sort=F) 
+    MeteoMonth_df_tidy_summaries_sf_list[[i]] <- inner_join(vg2500_krs, MeteoMonth_df_tidy_summaries_list[[i]], by=c("comId")) 
     
   } ## End of loop
+  
   
   #### Check data.frame created ####
   summary(MeteoMonth_df_tidy_summaries_list[[2]])
@@ -192,8 +382,12 @@ for (l in seq_along(namelist_RCMs)){
   MeteoMonth_df_tidy_summaries_diff2070 <- MeteoMonth_df_tidy_summaries_list[[3]] - MeteoMonth_df_tidy_summaries_list[[1]] 
   MeteoMonth_df_tidy_summaries_diff2021
   
+  
   MeteoMonth_df_tidy_summaries_diff2021$comId <- MeteoMonth_df_tidy_summaries_list[[2]]$comId
   MeteoMonth_df_tidy_summaries_diff2070$comId <- MeteoMonth_df_tidy_summaries_list[[2]]$comId
+  
+  MeteoMonth_df_tidy_summaries_diff2021$RCM <- rep(unique(MeteoMonth_df_tidy$RCM), 406)
+  MeteoMonth_df_tidy_summaries_diff2070$RCM <- rep(unique(MeteoMonth_df_tidy$RCM), 406)
 
   summary(MeteoMonth_df_tidy_summaries_diff2021)
   summary(MeteoMonth_df_tidy_summaries_diff2070)
@@ -201,28 +395,28 @@ for (l in seq_along(namelist_RCMs)){
   
   ##########################################################################
   #### Merge difference data with vg2500_krs to get Spatial Attributes ####
-  MeteoMonth_df_tidy_summaries_diff2021_sf <- merge(vg2500_krs, MeteoMonth_df_tidy_summaries_diff2021, by.x = "RS", by.y = "comId", all.x, sort=F)
-  MeteoMonth_df_tidy_summaries_diff2070_sf <- merge(vg2500_krs, MeteoMonth_df_tidy_summaries_diff2070, by.x = "RS", by.y = "comId", all.x, sort=F)
+  MeteoMonth_df_tidy_summaries_diff2021_sf <-  inner_join(vg2500_krs, MeteoMonth_df_tidy_summaries_diff2021, by = c("comId"))
+  MeteoMonth_df_tidy_summaries_diff2070_sf <-  inner_join(vg2500_krs, MeteoMonth_df_tidy_summaries_diff2070, by = c("comId"))
   
-  MeteoMonth_df_tidy_summaries_diff2021_sf$RS ## order of vg2500_krs is kept (sort=F)
+  # MeteoMonth_df_tidy_summaries_diff2021_sf$comId ## order of vg2500_krs is kept (sort=F)
+  # 
+  # MeteoMonth_df_tidy_summaries_diff2021_sf
+  # 
+  # summary(MeteoMonth_df_tidy_summaries_diff2070_sf)
   
-  MeteoMonth_df_tidy_summaries_diff2021_sf
-  
-  summary(MeteoMonth_df_tidy_summaries_diff2070_sf)
-  
-  ###################################
-  #### Export summary statistics ####
-  stargazer(MeteoMonth_df_tidy_summaries_diff2021, type = "text", title="Descriptive statistics", digits=3,
-            out=paste("./figures/figures_exploratory/Proj/MeteoVar/","DeskriptiveStats_diff2021_", namelist_RCMs[[l]], ".txt", sep=""))
-  stargazer(MeteoMonth_df_tidy_summaries_diff2070, type = "text", title="Descriptive statistics", digits=3,
-            out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_diff2070_",  namelist_RCMs[[l]],".txt", sep=""))
-  stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[1]]), type = "text", title="Descriptive statistics", digits=3,
-            out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_1970_", namelist_RCMs[[l]],".txt", sep=""))
-  stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[2]]), type = "text", title="Descriptive statistics", digits=3,
-            out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_2021_", namelist_RCMs[[l]],".txt", sep=""))
-  stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[3]]), type = "text", title="Descriptive statistics", digits=3,
-            out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_2070_", namelist_RCMs[[l]],".txt", sep=""))
-  
+  # ###################################
+  # #### Export summary statistics ####
+  # stargazer(MeteoMonth_df_tidy_summaries_diff2021, type = "text", title="Descriptive statistics", digits=3,
+  #           out=paste("./figures/figures_exploratory/Proj/MeteoVar/","DeskriptiveStats_diff2021_", namelist_RCMs[[t]], ".txt", sep=""))
+  # stargazer(MeteoMonth_df_tidy_summaries_diff2070, type = "text", title="Descriptive statistics", digits=3,
+  #           out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_diff2070_",  namelist_RCMs[[t]],".txt", sep=""))
+  # stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[1]]), type = "text", title="Descriptive statistics", digits=3,
+  #           out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_1970_", namelist_RCMs[[t]],".txt", sep=""))
+  # stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[2]]), type = "text", title="Descriptive statistics", digits=3,
+  #           out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_2021_", namelist_RCMs[[t]],".txt", sep=""))
+  # stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[3]]), type = "text", title="Descriptive statistics", digits=3,
+  #           out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_2070_", namelist_RCMs[[t]],".txt", sep=""))
+  # 
   ##############################################################################################################################################################################
   ##############################################################################################################################################################################
   #### Start of Plotting ####
@@ -240,298 +434,109 @@ for (l in seq_along(namelist_RCMs)){
   - SMI in August
   '
 
-  
-  ###########################################
-  #### Define colorRamps of Differences ####
-  #########################################
-  
-  ##############
-  #### Mean ####
-  
-  #### Temp July ####
-  summary(MeteoMonth_df_tidy_summaries_diff2070_sf$T_Jul_demeaned_Mean)
-  summary(MeteoMonth_df_tidy_summaries_diff2021_sf$T_Jul_demeaned_Mean)
-  
-  myPalette <- colorRampPalette((rev(brewer.pal(9, "RdBu"))))
-  sc_T_Jul_Mean <- scale_fill_gradientn("July Temp.", colours = myPalette(100), limits=c(-3.8, 3.8))
-  
-  #### Prec July ####
-  summary(MeteoMonth_df_tidy_summaries_diff2070_sf$P_Jul_demeaned_Mean)
-  summary(MeteoMonth_df_tidy_summaries_diff2021_sf$P_Jul_demeaned_Mean)
-  
-  myPalette <- colorRampPalette((brewer.pal(11, "PuOr")))
-  sc_P_Jul_Mean <- scale_fill_gradientn("July Pc.",colours = myPalette(100), limits=c(-52, 52))
-  
-  #### June SMI ####
-  summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Jun_Mean)
-  summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Jun_Mean)
-  
-  myPalette <- colorRampPalette((brewer.pal(11, "RdBu")))
-  sc_SMI_Jun_Mean <- scale_fill_gradientn("June SMI", colours = myPalette(100), limits=c(-0.4, 0.4))
-  
-  #### July SMI ####
-  summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Jul_Mean)
-  summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Jul_Mean)
-  
-  myPalette <- colorRampPalette((brewer.pal(11, "RdBu")))
-  sc_SMI_Jul_Mean <- scale_fill_gradientn("July SMI", colours = myPalette(100), limits=c(-0.4, 0.4))
-  
-  #### August SMI ####
-  summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Aug_Mean)
-  summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Aug_Mean)
-
-  myPalette <- colorRampPalette((brewer.pal(11, "RdBu")))
-  sc_SMI_Aug_Mean <- scale_fill_gradientn("August SMI", colours = myPalette(100), limits=c(-0.4, 0.4))
-  
-  # ############
-  # #### SD ####
-  ' SD Considerations not implemented yet for demeaned data'
-  # 
-  # #### July Temperature ####
-  # summary(MeteoMonth_df_tidy_summaries_diff2070_sf$T_Jul_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_diff2021_sf$T_Jul_demeaned_Sd)
-  # 
-  # myPalette <- colorRampPalette((brewer.pal(9, "PRGn")))
-  # sc_T_Jul_Sd <- scale_fill_gradientn("July Temp.", colours = myPalette(100), limits=c(-0.7, 0.7))
-  # 
-  # #### July Prec ####
-  # summary(MeteoMonth_df_tidy_summaries_diff2070_sf$P_Jul_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_diff2021_sf$P_Jul_demeaned_Sd)
-  # 
-  # myPalette <- colorRampPalette((brewer.pal(11, "PRGn")))
-  # sc_P_Jul_Sd <- scale_fill_gradientn("July Prec.",colours = myPalette(100), limits=c(-25, 25))
-  # 
-  # #### June SMI ####
-  # summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Jun_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Jun_Sd)
-  # 
-  # myPalette <- colorRampPalette((brewer.pal(11, "PRGn")))
-  # sc_SMI_Jun_Sd <- scale_fill_gradientn("June SMI", colours = myPalette(100), limits=c(-0.25, 0.25))
-  # 
-  # #### July SMI ####
-  # summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Jul_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Jul_Sd)
-  # 
-  # myPalette <- colorRampPalette((brewer.pal(11, "PRGn")))
-  # sc_SMI_Jul_Sd <- scale_fill_gradientn("July SMI", colours = myPalette(100), limits=c(-0.25, 0.25))
-  # 
-  # #### August SMI ####
-  # summary(MeteoMonth_df_tidy_summaries_diff2070_sf$SMI_Aug_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_diff2021_sf$SMI_Aug_demeaned_Sd)
-  # 
-  # myPalette <- colorRampPalette((brewer.pal(11, "PRGn")))
-  # sc_SMI_Aug_Sd <- scale_fill_gradientn("August SMI", colours = myPalette(100), limits=c(-0.25, 0.25))
-  # 
-  # ################################################
-  # #### Define ColorRamps for absolute values ####
-  # ##############################################
-  # 
-  # ##############
-  # #### Mean ####
-  # 
-  # #### T in July ####
-  # # str(MeteoMonth_df_tidy_summaries_sf_list,1)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$T_Jul_demeaned_Mean)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$T_Jul_demeaned_Mean)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$T_Jul_demeaned_Mean)
-  # 
-  # myPalette <- colorRampPalette((brewer.pal(9, "RdPu")))
-  # sc_abs_T_Jul_Mean <- scale_fill_gradientn("July Temp.",colours = myPalette(100), limits=c(-2, 2))
-  # #   sc_abs_T_Jul_Mean <- scale_fill_gradientn("July Temp.",colours = myPalette(100), limits=c(11, 24))
-  # 
-  # 
-  # #### P in July ####
-  # str(MeteoMonth_df_tidy_summaries_sf_list,1)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$P_Jul_demeaned_Mean)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$P_Jul_demeaned_Mean)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$P_Jul_demeaned_Mean)
-  # 
-  # myPalette <- colorRampPalette((brewer.pal(9, "PuBu")))
-  # sc_abs_P_Jul_Mean <- scale_fill_gradientn("July Prec.",colours = myPalette(100), limits=c(-40, 40))
-  # 
-  # #### SMI  ####
-  # ## June
-  # str(MeteoMonth_df_tidy_summaries_sf_list,1)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Jun_demeaned_Mean)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Jun_demeaned_Mean)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Jun_demeaned_Mean)
-  # 
-  # ## July ##
-  # str(MeteoMonth_df_tidy_summaries_sf_list,1)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Jul_demeaned_Mean)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Jul_demeaned_Mean)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Jul_demeaned_Mean)
-  # 
-  # 
-  # ## August ##
-  # str(MeteoMonth_df_tidy_summaries_sf_list,1)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Aug_demeaned_Mean)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Aug_demeaned_Mean)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Aug_demeaned_Mean)
-  # 
-  # #### Set common colorRamp for all SMI ####
-  # myPalette <- colorRampPalette((brewer.pal(9, "BrBG")))
-  # sc_abs_SMI_Mean <- scale_fill_gradientn(colours = myPalette(100), limits=c(0, 1))
-  # 
-  # ############################
-  # #### Standard Deviation ####
-  # 
-  # ####  T in July ####
-  # 
-  # str(MeteoMonth_df_tidy_summaries_sf_list,1)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$T_Jul_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$T_Jul_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$T_Jul_demeaned_Sd)
-  # 
-  # 
-  # myPalette <- colorRampPalette((brewer.pal(9, "RdPu")))
-  # sc_abs_T_Jul_Sd <- scale_fill_gradientn("July Temp.", colours = myPalette(100), limits=c(0, 2.5))
-  # 
-  # ####  P in July ####
-  # 
-  # str(MeteoMonth_df_tidy_summaries_sf_list,1)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$P_Jul_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$P_Jul_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$P_Jul_demeaned_Sd)
-  # 
-  # myPalette <- colorRampPalette((brewer.pal(9, "PuBu")))
-  # sc_abs_P_Jul_Sd <- scale_fill_gradientn("July Prec.",colours = myPalette(100), limits=c(0, 100))
-  # 
-  # 
-  # ####  SMI ####
-  #   
-  # ## June 
-  # str(MeteoMonth_df_tidy_summaries_sf_list,1)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Jun_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Jun_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Jun_demeaned_Sd)
-  # 
-  # ## July 
-  # 
-  # str(MeteoMonth_df_tidy_summaries_sf_list,1)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Jul_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Jul_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Jul_demeaned_Sd)
-  # 
-  # ## August 
-  # 
-  # str(MeteoMonth_df_tidy_summaries_sf_list,1)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[1]]$SMI_Aug_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[2]]$SMI_Aug_demeaned_Sd)
-  # summary(MeteoMonth_df_tidy_summaries_sf_list [[3]]$SMI_Aug_demeaned_Sd)
-  # 
-  # 
-  # ## Set shared colorRamp for all SMI ## 
-  # myPalette <- colorRampPalette((brewer.pal(9, "GnBu")))
-  # sc_abs_SMI_Sd <- scale_fill_gradientn(colours = myPalette(100), limits=c(0.1, 0.4))
-
   #########################################################################
   #### Subset data.frame for Mean and Sd Values of relevant variables ####
   #######################################################################
-  
+  MeteoMonth_df_tidy_summaries_diff2070_sf$RCM
   MeteoMonth_df_tidy_summaries_diff2070_sf_short <- MeteoMonth_df_tidy_summaries_diff2070_sf %>%
-    select(RS , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
+    select(comId , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
                                                     T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd)
   
   MeteoMonth_df_tidy_summaries_diff2021_sf_short <- MeteoMonth_df_tidy_summaries_diff2021_sf  %>%
-    select(RS , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
+    select(comId , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
            T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd)
+  # 
+  # MeteoMonth_df_tidy_summaries_absolute1970_sf_short  <- MeteoMonth_df_tidy_summaries_sf_list [[1]] %>%
+  #   select(comId , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
+  #          T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd)
+  # 
+  # MeteoMonth_df_tidy_summaries_absolute2021_sf_short  <- MeteoMonth_df_tidy_summaries_sf_list [[2]]  %>%
+  #   select(comId , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
+  #          T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd)
+  # 
+  # MeteoMonth_df_tidy_summaries_absolute2050_sf_short  <- MeteoMonth_df_tidy_summaries_sf_list [[3]]  %>%
+  #   select(comId , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
+  #          T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd)
   
-  MeteoMonth_df_tidy_summaries_absolute1970_sf_short  <- MeteoMonth_df_tidy_summaries_sf_list [[1]] %>%
-    select(RS , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
-           T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd)
+ # summary(MeteoMonth_df_tidy_summaries_absolute2021_sf_short$SMI_Jun_Sd)
   
-  MeteoMonth_df_tidy_summaries_absolute2021_sf_short  <- MeteoMonth_df_tidy_summaries_sf_list [[2]]  %>%
-    select(RS , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
-           T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd)
+  # names(MeteoMonth_df_tidy_summaries_absolute2021_sf_short)
   
-  MeteoMonth_df_tidy_summaries_absolute2050_sf_short  <- MeteoMonth_df_tidy_summaries_sf_list [[3]]  %>%
-    select(RS , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
-           T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd)
+ 
+  # m = g = 1
+  #   n = k = 2
+  # m = 1
+  # g =1
+  # n = 2
+  # k=2
   
- summary(MeteoMonth_df_tidy_summaries_absolute2021_sf_short$SMI_Jun_Sd)
-  
-  names(MeteoMonth_df_tidy_summaries_absolute2021_sf_short)
-  
-  ###########################################
-  #### Faktor to accaunt for Mean and SD ####
-  Mean_Fac <- 5
-  Sd_Fac <- 10
-  
-  ##########################################
-  #### Create list of variables to plot ####
-  ## Lidt of colorRamps ##
-  list_sc <- c( sc_T_Jul_Mean, sc_P_Jul_Mean, sc_SMI_Jun_Mean, sc_SMI_Jul_Mean, sc_SMI_Aug_Mean)
-  # ,               sc_T_Jul_Sd, sc_P_Jul_Sd, sc_SMI_Jun_Sd, sc_SMI_Jul_Sd, sc_SMI_Aug_Sd)
-  # list_sc_abs <- c( sc_abs_T_Jul_Mean, sc_abs_P_Jul_Mean, sc_abs_SMI_Mean, sc_abs_SMI_Mean, sc_abs_SMI_Mean,
-  #                   sc_abs_T_Jul_Sd, sc_abs_P_Jul_Sd, sc_abs_SMI_Sd, sc_abs_SMI_Sd, sc_abs_SMI_Sd)
-  
-  list_statistic <- c("Mean", "Standard Deviation")
-  list_statistic_export <- c("Mean", "StandardDeviation")
-  
-  list_statistics_Fac <- c(Mean_Fac, Sd_Fac)
-  list_sc_Fac <- c(0,5)
-  list_variableName <-c("July Temp.", "July Prec.", "June SMI", "July SMI", "Aug. SMI")
-  list_variableName_export <-c("July_Temp", "July_Prec", "June_SMI", "July_SMI", "Aug_SMI")
-  list_legend_Variables <- c("none", "bottom")
-  list_legend_export <- c("noLegend", "legend")
-  
-  list_titleVariables <- list(element_text(color="white") , element_text(color="black") )
-  list_title_export <- list("noTitle", "title")
-  
-  m = g = 1
-    n = k = 2
-  ###################################
-  #### (2070-2099) - (1971-2000) ####
+  # ###################################
+  # #### (2070-2099) - (1971-2000) ####
   #### loop through Variables
-  for (m in seq_along(list_variableName)){ 
-    #### loop through statistics -> here I am only looking at Means
-    for (g in 1:1){ 
-      #### loop trough title
-      for(n in seq_along(list_title_export )){
-        #### loop trough legend 
-        for(k in seq_along(list_legend_Variables)){
-    
-          ###################################
-          #### (2071-2099) - (1971-2000) ####
-          plot_diff2070 <-
+  for (m in seq_along(list_variableName))
+    local({ # seq_along(list_variableName)
+    m <- m
+  #   #### loop through statistics -> here I am only looking at Means
+  #   for (g in 1:1){  # seq_along(list_statistic)
+  #     #### loop trough title
+  #     for(n in seq_along(list_title_export )){
+  #       #### loop trough legend 
+  #       for(k in seq_along(list_legend_export) ){ # seq_along(list_titleVariables)
+
+          ##################################
+          ### (2071-2099) - (1971-2000) ####
+          plot1 <-
             ggplot(MeteoMonth_df_tidy_summaries_diff2070_sf_short) +
             geom_sf(aes(fill =  MeteoMonth_df_tidy_summaries_diff2070_sf_short [[list_statistics_Fac[[g]] + m]])) +
-            ggtitle(paste("(2070-2099) - (1971-2000)",  ": ", list_statistic[[g]], " of ", list_variableName[[m]],  sep="")) +
+            ggtitle(paste("(2070-2099) - (1971-2000)",  ": ", list_statistic[[g]], " of ", list_variableName[[m]], " - ",namelist_RCMs[[t]],  sep="")) +
             list_sc[[list_sc_Fac[[g]] + m]] +
-            theme_bw()    +
+            theme_bw()  +
             theme(legend.position=list_legend_Variables[k]) +
             theme(legend.title=element_blank()) +
             theme(title =list_titleVariables [[n]] )
-          
+       
+          # print(t); 
+          print(namelist_RCMs[[t]])
+          # print(m); 
+          print(list_variableName[[m]])
+          print(plot1)
+          plot_diff2070_list[[k]][[n]][[g]][[m]][[t]] <<- plot1
+    
           # plot_diff2070
           
           #### Add to list necessary for combined structural plots #####
-          plot_diff2070_list[[k]][[n]][[g]][[m]][[l]] <- plot_diff2070
+          # plot_diff2070_list[[k]][[n]][[g]][[m]][[t]] <- plot_diff2070
+          # 
+          # plot_mean_diff2070_list[[m]][[t]] <- plot_diff2070
+          # 
+          # plot_mean_diff2070_TJul_list[[t]] <- plot_diff2070
+          
+          # myplots[[t]]  <- plot_diff2070
+          
           # str(plot_diff2070_list[[k]])
-          
-          ###################################
-          #### (2021-2050) - (1971-2000) ####
-          plot_diff2021 <-
-            ggplot(MeteoMonth_df_tidy_summaries_diff2021_sf_short) +
-            geom_sf(aes(fill =  MeteoMonth_df_tidy_summaries_diff2021_sf_short[[list_statistics_Fac[[g]] + m]])) +
-            ggtitle(paste("(2021-2050) - (1971- 2000)",  ": ", list_statistic[[g]], " of ", list_variableName[[m]],  sep="")) +
-            list_sc[[list_sc_Fac[[g]] + m]] +
-            theme_bw() + 
-            theme(legend.position=list_legend_Variables[k]) +
-            theme(legend.title=element_blank()) + 
-            theme(title = list_titleVariables [[n]] )
-          
-        
-          # plot_diff2021
-          
-          #########################################################
-          #### Generate combined plots of the difference plots ####
-          plot_diff <-grid.arrange(plot_diff2021, plot_diff2070, ncol=2, top=textGrob(paste(namelist_RCMs[[l]]), gp=gpar(fontsize=20)))
-          
-          ggsave(paste("./figures/figures_exploratory/Proj/MeteoVar/Differences/", list_title_export[[n]], "/", list_legend_export[[k]], "/plot_", 
-                       list_statistic_export[[g]] , "_diff_", list_variableName_export[[m]],"_", 
-                       namelist_RCMs[[l]], "_", list_title_export[[n]], "_", list_legend_export[[k]], ".pdf", sep=""), plot=plot_diff, "pdf",width=14, height=8)
+          # plot_diff2070_list[[k]][[n]][[g]][[m]][[5]]
+          # ###################################
+          # #### (2021-2050) - (1971-2000) ####
+          # plot_diff2021 <-
+          #   ggplot(MeteoMonth_df_tidy_summaries_diff2021_sf_short) +
+          #   geom_sf(aes(fill =  MeteoMonth_df_tidy_summaries_diff2021_sf_short[[list_statistics_Fac[[g]] + m]])) +
+          #   ggtitle(paste("(2021-2050) - (1971- 2000)",  ": ", list_statistic[[g]], " of ", list_variableName[[m]],  sep="")) +
+          #   list_sc[[list_sc_Fac[[g]] + m]] +
+          #   theme_bw() + 
+          #   theme(legend.position=list_legend_Variables[k]) +
+          #   theme(legend.title=element_blank()) + 
+          #   theme(title = list_titleVariables [[n]] )
+          # 
+          # 
+          # # plot_diff2021
+          # 
+          # #########################################################
+          # #### Generate combined plots of the difference plots ####
+          # plot_diff <-grid.arrange(plot_diff2021, plot_diff2070, ncol=2, top=textGrob(paste(namelist_RCMs[[t]]), gp=gpar(fontsize=20)))
+          # 
+          # ggsave(paste("./figures/figures_exploratory/Proj/MeteoVar/Differences/", list_title_export[[n]], "/", list_legend_export[[k]], "/plot_", 
+          #              list_statistic_export[[g]] , "_diff_", list_variableName_export[[m]],"_", 
+          #              namelist_RCMs[[t]], "_", list_title_export[[n]], "_", list_legend_export[[k]], ".pdf", sep=""), plot=plot_diff, "pdf",width=14, height=8)
         
           ##############################
           #### Absolute Values 1971 ####
@@ -573,18 +578,29 @@ for (l in seq_along(namelist_RCMs)){
           
           ##########################################
           #### Combine plots of absolute values ####
-          # plot_abs <- grid.arrange(plot_1970, plot_2021, plot_2070, ncol=3, top=textGrob(paste(namelist_RCMs[[l]]),gp=gpar(fontsize=30)))  
+          # plot_abs <- grid.arrange(plot_1970, plot_2021, plot_2070, ncol=3, top=textGrob(paste(namelist_RCMs[[t]]),gp=gpar(fontsize=30)))  
           
           # ggsave(paste("./figures/figures_exploratory/Proj/MeteoVar/Absolutes/", list_title_export[[n]], "/", list_legend_export[[k]], "/plot_", 
           #              list_statistic_export[[g]] , "_abs_", list_variableName_export[[m]],"_", 
-          #              namelist_RCMs[[l]], "_", list_title_export[[n]], "_", list_legend_export[[k]], ".pdf", sep=""), plot=plot_abs, "pdf",width=14, height=8)
+          #              namelist_RCMs[[t]], "_", list_title_export[[n]], "_", list_legend_export[[k]], ".pdf", sep=""), plot=plot_abs, "pdf",width=14, height=8)
           # 
-        } ## End of loop trough legend
-      
-      } ## End of loop trough title
-        
-    } ## Loop trough statistics
+  #       } ## End of loop trough legend
+  #     
+  #     } ## End of loop trough title
+  #       
+  #   } ## Loop trough statistics
+  # 
+  }) ## Loop trough variables
   
-  } ## Loop trough variables
-  
-} ##  Loop trough climate models
+}) ##  Loop trough climate models
+
+myplots[[1]]
+plot_mean_diff2070_TJul_list[[1]]
+plot_mean_diff2070_TJul_list
+plot_diff2070_list[[k]][[n]][[g]][[1]][[5]]
+plot_diff2070_list[[k]][[n]][[g]][[1]][[4]]
+
+plot_diff2070_list[[k]][[n]][[g]][[2]][[5]]
+plot_diff2070_list[[k]][[n]][[g]][[2]][[4]]
+
+str(plot_mean_diff2070_list,2)
