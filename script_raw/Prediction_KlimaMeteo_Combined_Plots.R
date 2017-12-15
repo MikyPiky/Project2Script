@@ -146,45 +146,56 @@ l =1 #(1="DMI", 2="ICTP", 3= "KNMI", 4="MPI", 5="SMHI")
 plot_diff2070_list[[k]][[n]][[g]][[m]][[l]]
 
 ## Colum of July Precipitation but Various RCMS
-m=1
-JulyTmp <- ggarrange(plot_diff2070_list[[k]][[n]][[g]][[m]][[1]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[2]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[3]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[4]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[5]],
+Tit = 2
+Leg = 2
+Stat= 1
+
+ExVar = 1
+plot_diff2070_list_title_legend[[1]][[1]] 
+JulyTmp <- ggarrange(plot_diff2070_list_notitle_legend[[ExVar]][[1]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[2]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[3]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[4]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[5]] ,
                       common.legend = TRUE, legend = "bottom",  ncol = 1, nrow=5)
 
-m=2
-JulyPrec <- ggarrange(plot_diff2070_list[[k]][[n]][[g]][[m]][[1]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[2]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[3]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[4]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[5]],
-                     common.legend = TRUE, legend = "bottom",  ncol = 1, nrow=5)
+JulyTmp_arrange <- arrangeGrob(plot_diff2070_list_notitle_legend[[ExVar]][[1]], plot_diff2070_list_notitle_legend[[ExVar]][[2]],
+             plot_diff2070_list_notitle_legend[[ExVar]][[3]], plot_diff2070_list_notitle_legend[[ExVar]][[4]],
+             plot_diff2070_list_notitle_legend[[ExVar]][[5]], nrow = 1)
+             
 
-m=3
-JuneSMI <- ggarrange(plot_diff2070_list[[k]][[n]][[g]][[m]][[1]],
-                      plot_diff2070_list[[k]][[n]][[g]][[m]][[2]],
-                      plot_diff2070_list[[k]][[n]][[g]][[m]][[3]],
-                      plot_diff2070_list[[k]][[n]][[g]][[m]][[4]],
-                      plot_diff2070_list[[k]][[n]][[g]][[m]][[5]],
+ExVar = 2
+JulyPrec <-  ggarrange(plot_diff2070_list_notitle_legend[[ExVar]][[1]] ,
+                       plot_diff2070_list_notitle_legend[[ExVar]][[2]] ,
+                       plot_diff2070_list_notitle_legend[[ExVar]][[3]] ,
+                       plot_diff2070_list_notitle_legend[[ExVar]][[4]] ,
+                       plot_diff2070_list_notitle_legend[[ExVar]][[5]] ,
+                       common.legend = TRUE, legend = "bottom",  ncol = 1, nrow=5)
+
+ExVar = 3
+JuneSMI <- ggarrange(plot_diff2070_list_notitle_legend[[ExVar]][[1]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[2]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[3]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[4]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[5]] ,
+                     common.legend = TRUE, legend = "bottom",  ncol = 1, nrow=5)
+ExVar = 4
+JulySMI <-  ggarrange(plot_diff2070_list_notitle_legend[[ExVar]][[1]] ,
+                      plot_diff2070_list_notitle_legend[[ExVar]][[2]] ,
+                      plot_diff2070_list_notitle_legend[[ExVar]][[3]] ,
+                      plot_diff2070_list_notitle_legend[[ExVar]][[4]] ,
+                      plot_diff2070_list_notitle_legend[[ExVar]][[5]] ,
                       common.legend = TRUE, legend = "bottom",  ncol = 1, nrow=5)
-m=4
-JulySMI <- ggarrange(plot_diff2070_list[[k]][[n]][[g]][[m]][[1]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[2]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[3]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[4]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[5]],
-                     common.legend = TRUE, legend = "bottom",  ncol = 1, nrow=5)
-m=5
-AugSMI <- ggarrange(plot_diff2070_list[[k]][[n]][[g]][[m]][[1]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[2]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[3]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[4]],
-                     plot_diff2070_list[[k]][[n]][[g]][[m]][[5]],
+ExVar = 5
+AugSMI <-  ggarrange(plot_diff2070_list_notitle_legend[[ExVar]][[1]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[2]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[3]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[4]] ,
+                     plot_diff2070_list_notitle_legend[[ExVar]][[5]] ,
                      common.legend = TRUE, legend = "bottom",  ncol = 1, nrow=5)
 
-nested <- ggarrange(JulyTmp, JulyPrec, JuneSMI, AugSMI,  ncol = 5, nrow=1)
+str(AugSMI, 2)
+nested <- ggarrange(JulyTmp, JulyPrec, JuneSMI, AugSMI,  ncol = 4, nrow=1)
 
 plot_structure2070 <- 
 grid.arrange(arrangeGrob(plot_mean_diff2070_PJul_list[[1]], plot_mean_diff2070_TJul_list[[1]], plot_mean_diff2070_SMIJun_list[[1]],
