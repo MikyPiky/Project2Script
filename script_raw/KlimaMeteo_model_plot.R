@@ -69,46 +69,74 @@ MeteoMonth_df_tidy_total <- read_csv("./data/data_proj/output/Climate_predicted_
 
 #### RCM container ####
 ' These containers store the plots of the yield predictions which are needed for the combined plots.'
-plot_mean_diff2070_TJul_list <- 
-plot_mean_diff2070_PJul_list <- 
-plot_mean_diff2070_SMIJun_list <- 
-plot_mean_diff2070_SMIAug_list <-
-plot_mean_diff2070_SMIJul_list <- list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMHI=list()) 
+# plot_mean_diff2070_TJul_list <- 
+# plot_mean_diff2070_PJul_list <- 
+# plot_mean_diff2070_SMIJun_list <- 
+# plot_mean_diff2070_SMIAug_list <-
+# plot_mean_diff2070_SMIJul_list <- 
+#   plot_mean_diff2070_SMIJul_list <- 
+#   plot_mean_diff2070_SMIJul_list <- 
+RCM_list <- 
+  list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMHI=list()) 
 
 #### Create different container depend on title, legend, and time period ####
 
 ## 2070 - 2099
+MeteoMonth_df_tidy_summaries_diff2070_sf_short
 plot_diff2070_list <- 
   plot_diff2070_list_notitle_legend <- 
   plot_diff2070_list_title_legend <- 
   plot_diff2070_list_notitle_nolegend <- 
   plot_diff2070_list_title_nolegend <- 
-    list(TJul = plot_mean_diff2070_TJul_list, PJul = plot_mean_diff2070_PJul_list, SMIJun = plot_mean_diff2070_SMIJun_list, 
-                                 SMIAug = plot_mean_diff2070_SMIAug_list, SMIJul = plot_mean_diff2070_SMIJul_list, plot_mean_diff2070_TJul_list, PJul = plot_mean_diff2070_PJul_list, SMIJun = plot_mean_diff2070_SMIJun_list, 
-         SMIAug = plot_mean_diff2070_SMIAug_list, SMIJul = plot_mean_diff2070_SMIJul_list)
+    list(TJul_Mean = RCM_list, 
+         PJul_Mean = RCM_list, 
+         SMIJun_Mean = RCM_list,
+         SMIAug_Mean = RCM_list, 
+         SMIJul_Mean = RCM_list,
+         
+         TJul_SD = RCM_list, 
+         PJul_SD = RCM_list, 
+         SMIJun_SD = RCM_list, 
+         SMIAug_SD = RCM_list, 
+         SMIJul_SD = RCM_list, 
+         
+         sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_Mean = RCM_list,
+         sMA_lm.fit_SMI_6_Jul_anomaly_demean_Mean = RCM_list,
+         sMA_mgcv_bestEARTH_noInteraction_T_anomaly_demean_Mean = RCM_list,
+         sMA_mgcv_SMI_6_Jun_Aug_anomaly_demean_Mean = RCM_list,
+         
+         sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_Sd = RCM_list,
+         sMA_lm.fit_SMI_6_Jul_anomaly_demean_Sd = RCM_list,
+         sMA_mgcv_bestEARTH_noInteraction_T_anomaly_demean_Sd = RCM_list, 
+         sMA_mgcv_SMI_6_Jun_Aug_anomaly_demean_Sd = RCM_list)
 
-plot_diff2021_list <- 
-  plot_diff2021_list_notitle_legend <- 
-  plot_diff2021_list_title_legend <- 
-  plot_diff2021_list_notitle_nolegend <- 
-  plot_diff2021_list_title_nolegend <- 
-  list(TJul = plot_mean_diff2070_TJul_list, PJul = plot_mean_diff2070_PJul_list, SMIJun = plot_mean_diff2070_SMIJun_list, 
-       SMIAug = plot_mean_diff2070_SMIAug_list, SMIJul = plot_mean_diff2070_SMIJul_list)
+str(plot_diff2070_list )
+
+# plot_diff2021_list <- 
+#   plot_diff2021_list_notitle_legend <- 
+#   plot_diff2021_list_title_legend <- 
+#   plot_diff2021_list_notitle_nolegend <- 
+#   plot_diff2021_list_title_nolegend <- 
+#   list(TJul = plot_mean_diff2070_TJul_list, 
+#        PJul = plot_mean_diff2070_PJul_list, 
+#        SMIJun = plot_mean_diff2070_SMIJun_list, 
+#        SMIAug = plot_mean_diff2070_SMIAug_list, 
+#        SMIJul = plot_mean_diff2070_SMIJul_list)
   
   # list(TJul = plot_sd_diff2070_TJul_list, PJul = plot_sd_diff2070_PJul_list, SMIJun = plot_sd_diff2070_SMIJun_list, 
                               # SMIAug = plot_sd_diff2070_SMIAug_list, SMIJul = plot_sd_diff2070_SMIJul_list)
 
-#### Combine mean and sd container ##
-plot_diff2070_list_statistics <- list(mean = plot_mean_diff2070_list, sd= plot_sd_diff2070_list)
-str(plot_diff2070_list_statistics)
-
-#### Create list for plots with and without titles ####
-plot_diff2070_list_title <- list(notitle = plot_diff2070_list_statistics, title = plot_diff2070_list_statistics )
-str(plot_diff2070_list_title)
-
-#### Create list for plots with legend at bottom and none ####
-plot_diff2070_list_total <- plot_diff2021_list_total <-list(bottomLegend = plot_diff2070_list_title, noLegend = plot_diff2070_list_title)
-str(plot_diff2070_list)
+# #### Combine mean and sd container ##
+# plot_diff2070_list_statistics <- list(mean = plot_mean_diff2070_list, sd= plot_sd_diff2070_list)
+# str(plot_diff2070_list_statistics)
+# 
+# #### Create list for plots with and without titles ####
+# plot_diff2070_list_title <- list(notitle = plot_diff2070_list_statistics, title = plot_diff2070_list_statistics )
+# str(plot_diff2070_list_title)
+# 
+# #### Create list for plots with legend at bottom and none ####
+# plot_diff2070_list_total <- plot_diff2021_list_total <-list(bottomLegend = plot_diff2070_list_title, noLegend = plot_diff2070_list_title)
+# str(plot_diff2070_list)
 
 ############################################################################################################################################################################
 ############################################################################################################################################################################
@@ -126,7 +154,7 @@ str(plot_diff2070_list)
 # summary(MeteoMonth_df_tidy_summaries_diff2021_sf$T_Jul_demeaned_Mean)
 
 myPalette <- colorRampPalette(brewer.pal(9, "Reds"))
-sc_T_Jul_Mean <- scale_fill_gradientn("July Temp.", colours = myPalette(100), limits=c(0,2.2))
+sc_T_Jul_Mean <- scale_fill_gradientn("July Temp.", colours = myPalette(100), limits=c(0,4))
 
 #### Prec July ####
 # summary(MeteoMonth_df_tidy_summaries_diff2070_sf$P_Jul_demeaned_Mean)
@@ -195,6 +223,13 @@ sc_SMI_Jul_Sd <- scale_fill_gradientn("July SMI", colours = myPalette(100), limi
 myPalette <- colorRampPalette((brewer.pal(11, "PRGn")))
 sc_SMI_Aug_Sd <- scale_fill_gradientn("August SMI", colours = myPalette(100), limits=c(-0.25, 0.25))
 
+#### Yield Anomaly Mean ####
+myPalette <- colorRampPalette((brewer.pal(11, "BrBG")))
+sc_Yield_Mean <- scale_fill_gradientn("dt/ha", colours = myPalette(100),  limits=c(-70, 70))
+
+#### Yield Anomaly SD ####
+myPalette <- colorRampPalette((brewer.pal(11, "PiYG")))
+sc_Yield_Sd <- scale_fill_gradientn("Yield Anomaly", colours = myPalette(100), limits=c(-30, 30))
 
 # ################################################
 # #### Define ColorRamps for absolute values ####
@@ -304,7 +339,8 @@ sc_SMI_Aug_Sd <- scale_fill_gradientn("August SMI", colours = myPalette(100), li
 
 #############################################
 #### Combine color variables in one list ####
-list_sc <- c( sc_T_Jul_Mean, sc_P_Jul_Mean, sc_SMI_Jun_Mean, sc_SMI_Jul_Mean, sc_SMI_Aug_Mean ,sc_T_Jul_Sd, sc_P_Jul_Sd, sc_SMI_Jun_Sd, sc_SMI_Jul_Sd, sc_SMI_Aug_Sd)
+list_sc <- c( sc_T_Jul_Mean, sc_P_Jul_Mean, sc_SMI_Jun_Mean, sc_SMI_Jul_Mean, sc_SMI_Aug_Mean ,sc_T_Jul_Sd, sc_P_Jul_Sd, sc_SMI_Jun_Sd, sc_SMI_Jul_Sd, sc_SMI_Aug_Sd, 
+              sc_Yield_Mean, sc_Yield_Mean, sc_Yield_Mean, sc_Yield_Mean, sc_Yield_Sd, sc_Yield_Sd, sc_Yield_Sd, sc_Yield_Sd )
 # list_sc_abs <- c( sc_abs_T_Jul_Mean, sc_abs_P_Jul_Mean, sc_abs_SMI_Mean, sc_abs_SMI_Mean, sc_abs_SMI_Mean,
 #                   sc_abs_T_Jul_Sd, sc_abs_P_Jul_Sd, sc_abs_SMI_Sd, sc_abs_SMI_Sd, sc_abs_SMI_Sd)
 
@@ -338,23 +374,28 @@ list_sc <- c( sc_T_Jul_Mean, sc_P_Jul_Mean, sc_SMI_Jun_Mean, sc_SMI_Jul_Mean, sc
 
 ## Variable List
 list_variableName <-c(paste("Mean of", c("July Temp.", "July Prec.", "June SMI", "July SMI", "Aug. SMI")),
-                      paste("SD of", c("July Temp.", "July Prec.", "June SMI", "July SMI", "Aug. SMI")) )
+                      paste("SD of", c("July Temp.", "July Prec.", "June SMI", "July SMI", "Aug. SMI")) , 
+                      paste("Mean of", nameList_climate),
+                      paste("SD of", nameList_climate) )
 
 list_variableName_export <- c(paste(c("July_Temp", "July_Prec", "June_SMI", "July_SMI", "Aug_SMI"), "Mean", sep="_"), 
-                            paste(c("July_Temp", "July_Prec", "June_SMI", "July_SMI", "Aug_SMI"), "SD", sep="_"))
+                            paste(c("July_Temp", "July_Prec", "June_SMI", "July_SMI", "Aug_SMI"), "SD", sep="_"), 
+                            paste( nameList_climate, "Mean", sep="_"), 
+                            paste( nameList_climate, "SD", sep="_"))
 
 # ## Legend List
-# list_legend_Variables <- c("none", "bottom")
-# list_legend_export <- c("noLegend", "legend")
+list_legend_Variables <- c("none", "bottom")
+list_legend_export <- c("noLegend", "legend")
 # 
-# list_titleVariables <- list(element_text(color="white") , element_text(color="black") )
-# list_title_export <- list("noTitle", "title")
+list_titleVariables <- list(element_text(color="white") , element_text(color="black") )
+list_title_export <- list("noTitle", "title")
 
 #######################################
 #### Define Function used in Loop ####
 #####################################
 plot_variables = function (TimePeriod, ExVar, RCMs, Tit, Leg){
   ggplot(TimePeriod) +
+    geom_sf(data=vg2500_krs, fill="gray", color="white")  +
     geom_sf(aes(fill = TimePeriod[[5 + ExVar]])) +
     ggtitle(paste(unique(TimePeriod$time),  ": ", list_variableName[[ ExVar]], " - ",namelist_RCMs[[RCMs]],  sep="") ) +
     list_sc[[ExVar]] +
@@ -363,11 +404,12 @@ plot_variables = function (TimePeriod, ExVar, RCMs, Tit, Leg){
     theme(legend.title=element_blank()) +
     theme(title =list_titleVariables [[Tit]] )
 }
-rm(Stat)
-TimePeriod <- MeteoMonth_df_tidy_summaries_diff2021_sf_short
-paste(unique(TimePeriod$time),  ": ", list_variableName[[ ExVar]], " - ",namelist_RCMs[[RCMs]],  sep="")
 
-plot_variables(MeteoMonth_df_tidy_summaries_diff2021_sf_short, ExVar, RCMs,  2, 2)
+# rm(Stat)
+# TimePeriod <- MeteoMonth_df_tidy_summaries_diff2021_sf_short
+# paste(unique(TimePeriod$time),  ": ", list_variableName[[ ExVar]], " - ",namelist_RCMs[[RCMs]],  sep="")
+
+# plot_variables(MeteoMonth_df_tidy_summaries_diff2021_sf_short, ExVar, RCMs,  2, 2)
 
 
 ######################
@@ -377,9 +419,9 @@ plot_variables(MeteoMonth_df_tidy_summaries_diff2021_sf_short, ExVar, RCMs,  2, 
 ## Variables for Statistics used: 1 = Mean, 2 = SD
 # Stat = 1 # Mean
 ## Variables for notitle of title: 1 = no title, 2 = title
-Tit = 2 # title
+# Tit = 2 # title
 ## Variablles for no legend of legend ##
-Leg = 2 # legend
+# Leg = 2 # legend
 
 # m is for Variable used, t is for RCM
 
@@ -515,15 +557,16 @@ for (RCMs in seq_along(namelist_RCMs))
   
   #### Differences ####
   MeteoMonth_df_tidy_summaries_diff2070_sf$RCM
+  summary(MeteoMonth_df_tidy_summaries_diff2070_sf$sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_Mean)
   MeteoMonth_df_tidy_summaries_diff2070_sf_short <- MeteoMonth_df_tidy_summaries_diff2070_sf %>%
     select(comId , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
-                                                    T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd, time)
+                                                    T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd, contains("sMA"), time)
   
   summary( MeteoMonth_df_tidy_summaries_diff2070_sf_short )
   
   MeteoMonth_df_tidy_summaries_diff2021_sf_short <- MeteoMonth_df_tidy_summaries_diff2021_sf  %>%
     select(comId , USE ,GEN , SHAPE_LENG,SHAPE_AREA ,  T_Jul_demeaned_Mean, P_Jul_demeaned_Mean, SMI_Jun_Mean, SMI_Jul_Mean, SMI_Aug_Mean,
-           T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd, time)
+           T_Jul_demeaned_Sd, P_Jul_demeaned_Sd, SMI_Jun_Sd, SMI_Jul_Sd, SMI_Aug_Sd, contains("sMA"), time)
    
   #### Absolute Values ####
   # MeteoMonth_df_tidy_summaries_absolute1970_sf_short  <- MeteoMonth_df_tidy_summaries_sf_list [[1]] %>%
@@ -652,6 +695,18 @@ Tit=2; Leg=2; ExVar = 1; RCMs =4
 plot_diff2070_list_title_legend[[ExVar]][[RCMs]]
 Tit=2; Leg=2; ExVar = 1; RCMs =5
 plot_diff2070_list_title_legend[[ExVar]][[RCMs]]
+
+Tit=2; Leg=2; ExVar = 1; RCMs =1
+plot_diff2070_list_title_legend[[ExVar]][[RCMs]]
+Tit=2; Leg=2; ExVar = 1; RCMs =2
+plot_diff2070_list_title_legend[[ExVar]][[RCMs]]
+Tit=2; Leg=2; ExVar = 1; RCMs =3
+plot_diff2070_list_title_legend[[ExVar]][[RCMs]]
+Tit=2; Leg=2; ExVar = 1; RCMs =4
+plot_diff2070_list_title_legend[[ExVar]][[RCMs]]
+Tit=2; Leg=2; ExVar = 1; RCMs =5
+plot_diff2070_list_title_legend[[ExVar]][[RCMs]]
+
 
 
 
