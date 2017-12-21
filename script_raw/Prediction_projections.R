@@ -260,11 +260,24 @@ for (r in seq_along(namelist_RCMs) ) {
 
 ##################################################################
 #### Create one large data.frame including all climate model ####
-Climate_predicted_list <- list( "DMI" = list(), "ICTP"= list(), "KNMI"= list(), "MPI"= list(),  "SMHI"= list())
+################################################################
+Climate_predicted_list <- list( "DMI" = list(), "ICTP"= list(), "KNMI"= list(), "MPI"= list(),  "SMHI"= list(), "All_RCMs" = list())
 
 for(r in seq_along(namelist_RCMs)){
 Climate_predicted_list[[r]]<- read_csv(paste("./data/data_proj/output/", namelist_RCMs[[r]],"/Climate_predicted.csv", sep="") )
 }
 
+
+## Store all RCMS in one data.frame ##
 Climate_predicted_allRCMs <- bind_rows(bind_rows(bind_rows(bind_rows(Climate_predicted_list[[1]], Climate_predicted_list[[2]]), Climate_predicted_list[[3]]), Climate_predicted_list[[4]]), Climate_predicted_list[[5]])
+Climate_predicted_allRCMs_average <- Climate_predicted_allRCMs
+
+## Make Indicator for all models ##
+Climate_predicted_allRCMs_average$RCM <-  rep("RCM_average", dim(Climate_predicted_allRCMs_average ) [1])
+
+Climate_predicted_total <- bind_rows(Climate_predicted_allRCMs, Climate_predicted_allRCMs_average )
+
+## Export data ##
 write_csv(Climate_predicted_allRCMs, paste("./data/data_proj/output/Climate_predicted_allRCMs.csv"))
+write_csv(Climate_predicted_total, paste("./data/data_proj/output/Climate_predicted_allRCMs_total.csv"))
+
