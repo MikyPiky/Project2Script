@@ -289,7 +289,7 @@ my.plotcorr (corr_season_PET,  col=colors[((corr_season+ 1)/2) * 100], diag='ell
 
 
 ## Export PDF ##
-pdf("figures/figures_exploratory/Train/CorrelationPlots/CorPlot_season", width = 12, height = 12)
+pdf("figures/figures_exploratory/Train/CorrelationPlots/CorPlot_season", width = 10, height = 10)
 my.plotcorr (corr_season,  col=colors[((corr_season+ 1)/2) * 100], diag='ellipse', lower.panel="number", main='Predictor correlations')
 dev.off()
 
@@ -315,8 +315,8 @@ par(mfrow=c(1,1))
 my.plotcorr (corr_SMI,  col=colors[((corr_SMI + 1)/2) * 100], diag='ellipse', lower.panel="number", main='Predictor correlations')
 
 ## Export PDF ##
-pdf("figures/figures_exploratory/Train/CorrelationPlots/CorPlot_SMI", width = 12, height = 12)
-my.plotcorr (corr_SMI,  col=colors[((corr_summer+ 1)/2) * 100], diag='ellipse', lower.panel="number", main='Predictor correlations')
+pdf("figures/figures_exploratory/Train/CorrelationPlots/CorPlot_SMI", width = 6, height = 6)
+my.plotcorr (corr_SMI,  col=colors[((corr_SMI + 1)/2) * 100], diag='ellipse', lower.panel="number", main='Predictor correlations')
 dev.off()
 
 ######################

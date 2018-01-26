@@ -273,7 +273,7 @@ Climate_predicted_allRCMs <- bind_rows(bind_rows(bind_rows(bind_rows(Climate_pre
 Climate_predicted_allRCMs_average <- Climate_predicted_allRCMs
 
 ## Make Indicator for all models ##
-Climate_predicted_allRCMs_average$RCM <-  rep("RCM_average", dim(Climate_predicted_allRCMs_average ) [1])
+Climate_predicted_allRCMs_average$RCM <-  rep("All_RCMs", dim(Climate_predicted_allRCMs_average ) [1])
 
 Climate_predicted_total <- bind_rows(Climate_predicted_allRCMs, Climate_predicted_allRCMs_average )
 

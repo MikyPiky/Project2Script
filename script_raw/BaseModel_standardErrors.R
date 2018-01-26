@@ -70,9 +70,9 @@ Wh.se_cross.fit_SMI_6_Jun_Aug_anomaly_demean  <- sqrt(diag(cov0.1.fit_SMI_6_Jun_
 
 # ## Driscoll Kraay ##
 summary(plm.fit_SMI_6_Jun_Aug_anomaly_demean)
-coeftest(pplm.fit_SMI_6_Jun_Aug_anomaly_demean,  vcov=function(x) vcovSCC(pplm.fit_SMI_6_Jun_Aug_anomaly_demean,method = "arellano",type = "HC0")) 
+coeftest(plm.fit_SMI_6_Jun_Aug_anomaly_demean,  vcov=function(x) vcovSCC(plm.fit_SMI_6_Jun_Aug_anomaly_demean,method = "arellano",type = "HC0")) 
 
-cov2.fit_SMI_6_Jun_Aug_anomaly_demean      <- vcovSCC(pplm.fit_SMI_6_Jun_Aug_anomaly_demean, method = "arellano",type = "HC0")
+cov2.fit_SMI_6_Jun_Aug_anomaly_demean      <- vcovSCC(plm.fit_SMI_6_Jun_Aug_anomaly_demean, method = "arellano",type = "HC0")
 DK.se.fit_SMI_6_Jun_Aug_anomaly_demean     <- sqrt(diag(cov2.fit_SMI_6_Jun_Aug_anomaly_demean ))
 
 # 
@@ -130,7 +130,7 @@ stargazer(plm.fit_SMI_6_Jun_Aug_anomaly_demean,
           model.numbers = FALSE,
           column.labels = c("Standard", "Driscol - Kraay")
           , type="latex"
-          # , out="./figures/figures_exploratory/Train/lm.fit_SMI_6_Jun_Aug/RegressionResults/fit_SMI_6_Jun_Aug_short_TEX.txt"
+          , out="./figures/figures_exploratory/Train/lm.fit_SMI_6_Jun_Aug/RegressionResults/fit_SMI_6_Jun_Aug_short_TEX.tex"
           )
 
 

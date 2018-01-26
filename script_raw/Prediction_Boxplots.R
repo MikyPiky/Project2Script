@@ -62,22 +62,12 @@ predictive_models <- list("sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean", "sMA_mgcv_S
   i loops trough prediction models
   '
 
-#############################################################
-#### Load yield predictions derived from different RCms ####
-############################################################
-for (s in seq_along(namelist_RCMs)){
-
-  PredictData_df_tidy[[s]] <- read_csv(paste("./data/data_proj/output/",  namelist_RCMs[[s]],"/Climate_predicted.csv", sep="") )
-}
-
-##############################################################
-#### Make one large data.frame representing all the RCMS ####
-############################################################
-PredictData_df_tidy <- bind_rows(bind_rows(bind_rows(bind_rows(PredictData_df_tidy[[1]], 
-                                                                PredictData_df_tidy[[2]]), 
-                                                                  PredictData_df_tidy[[3]]), 
-                                                                    PredictData_df_tidy[[4]]), 
-                                                                      PredictData_df_tidy[[5]])
+########################################################################################
+#### Load Meteo_df_tidy data.frames including a column for the RCMs and "All RCMs" ####
+######################################################################################
+PredictData_df_tidy <-  read_csv("./data/data_proj/output/Climate_predicted_allRCMs_total.csv")
+PredictData_df_tidy
+unique(PredictData_df_tidy$RCM)
 
 # ##################################################################################################
 # #### Make one large data,frame and adding to large data.frame tagging all 5 RCMs as Avg_RCMs ####
@@ -118,6 +108,9 @@ for (r in 1:3){
     filter(year >=  climateyears_list[[1]][r] & year <= climateyears_list[[2]][r]) %>% 
     mutate(climate_period = climateyears_dummy_list[[r]])
 }
+unique(PredictData_df_tidy_summaries_list[[1]]$climate_period)
+unique(PredictData_df_tidy_summaries_list[[2]]$climate_period)
+unique(PredictData_df_tidy_summaries_list[[3]]$climate_period)
 
 #############################################################################################################################
 #### Loop to generate the mean conditional on the RCMs (and all models) and the administrative district for each period ####
@@ -132,8 +125,16 @@ for (r in 1:3){
 }
 
 # View(PredictData_df_tidy_summaries_list[[2]])
-PredictData_df_tidy_summaries_list
-unique(PredictData_df_tidy_summaries_list$PredictData_df_tidy_summaries_1979$RCM)
+# View(PredictData_df_tidy_summaries_list[1])
+# unique(PredictData_df_tidy_summaries_list$PredictData_df_tidy_summaries_1979$RCM)
+
+#### Read out summary for a specific RCM ####
+# unique(PredictData_df_tidy_summaries_list[[2]]$climate_period)
+# unique(PredictData_df_tidy_summaries_list[[2]]$RCM)
+
+PredictData_df_tidy_summaries_list[[2]] %>% filter(RCM == "DMI") %>% summary
+PredictData_df_tidy_summaries_list[[2]] %>% filter(RCM == "SMHI") %>% summary
+PredictData_df_tidy_summaries_list[[2]] %>% filter(RCM == "All_RCMs") %>% summary
 
 ####################################
 #### Change order of variables ####
@@ -178,9 +179,9 @@ PredictData_df_tidy_summaries_list_diff[[r]]  <- bind_cols( bind_cols( bind_cols
                                                                                     climatePeriodMinusReferencePeriod_onlyLastMeans)
 }
 
-
-
-
+PredictData_df_tidy_summaries_list_diff[[3]]  %>% summary
+# okay, bisher 
+# unique(PredictData_df_tidy_summaries_list_diff[[3]]$RCM )
 
 ##########################################################################
 #### Combine data.frame to a large one covering all climate periods  ####
@@ -205,11 +206,20 @@ PredictData_df_tidy_climate20212070_diff
 PredictData_df_tidy_climate_allModels         <- as.data.frame(PredictData_df_tidy_climate_diff         %>% filter(RCM %in% (namelist_RCMs)))
 PredictData_df_tidy_climate20212070_allModels <- as.data.frame(PredictData_df_tidy_climate20212070_diff %>% filter(RCM %in% (namelist_RCMs)))
 
-PredictData_df_tidy_climate_allModels         <- as.tibble(PredictData_df_tidy_climate_allModels         %>% mutate(RCM = "All Models"))
-PredictData_df_tidy_climate20212070_allModels <- as.tibble(PredictData_df_tidy_climate20212070_allModels %>% mutate(RCM = "All Models"))
+PredictData_df_tidy_climate_allModels         <- as.tibble(PredictData_df_tidy_climate_allModels         %>% mutate(RCM = "All RCMs"))
+PredictData_df_tidy_climate20212070_allModels <- as.tibble(PredictData_df_tidy_climate20212070_allModels %>% mutate(RCM = "All RCMs"))
 
 PredictData_df_tidy_climate_complete          <- bind_rows(PredictData_df_tidy_climate_diff, PredictData_df_tidy_climate_allModels)
 PredictData_df_tidy_climate20212070_complete  <- bind_rows(PredictData_df_tidy_climate20212070_diff, PredictData_df_tidy_climate20212070_allModels)
+
+####################################
+#### Rename All_RCMs Indikator ####
+##################################
+PredictData_df_tidy_climate_complete[PredictData_df_tidy_climate_complete$RCM == "All_RCMs", "RCM"] <- "Avg. of RCMs"
+# unique(PredictData_df_tidy_climate_complete$RCM)
+PredictData_df_tidy_climate20212070_complete[PredictData_df_tidy_climate20212070_complete$RCM == "All_RCMs", "RCM"] <- "Avg. of RCMs"
+
+
 
 ########################################################
 #### Define Data Summary Statistic used in ggplots ####
@@ -237,15 +247,20 @@ pMeanMinusMean_plot <-
   geom_violin(aes(fill = RCM), draw_quantiles = c(0.25, 0.5, 0.75), width=1, color="blue")  + 
   facet_grid(. ~ RCM)  +
   stat_summary(fun.data=data_summary, color="orange")   + 
-  theme_minimal(base_size = 14) +  
-  theme(legend.position="none")  + 
+  # theme_minimal(base_size = 50) +  
+
   scale_fill_brewer(palette="Greys")  +
   # ggtitle(paste(nameList_climate[[i]]))  +
-  ylab("Mean(Y) of climate period - Mean(Y) of reference period") + 
+  ylab("Mean (Y) of climate period - Mean (Y) of reference period") + 
   xlab("Climate Period") +
-  scale_y_continuous(limits=c(-80, 50))  + 
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5)) + 
+  scale_y_continuous(limits=c(-60, 15))  + 
+  theme_base() + 
+  # theme(plot.title = element_text(hjust = 0.5, size= 30)) + 
+  theme(legend.position="none")  + 
+  theme(title = element_text(hjust = 0.5, size= 18)) +
+  theme(strip.text.x = element_text(size = 18) ) + 
+  theme(axis.text.x = element_text(size = 12) ) + 
+  theme(axis.text.y = element_text(size = 15) ) + 
   guides(fill=FALSE)
 
 
@@ -271,10 +286,14 @@ pLevelMinusMean_plot <-  pLevelMinusMean + geom_hline(yintercept=0, color="gray"
   ylab("Y of climate period - Mean(Y) of reference period ") + 
   xlab("Climate Period") +
   scale_y_continuous(limits=c(-500, 500))  + 
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme_base() + 
+  # theme(plot.title = element_text(hjust = 0.5, size= 30)) + 
+  theme(legend.position="none")  + 
+  theme(title = element_text(hjust = 0.5, size= 18)) +
+  theme(strip.text.x = element_text(size = 18) ) + 
+  theme(axis.text.x = element_text(size = 15) ) + 
+  theme(axis.text.y = element_text(size = 15) ) + 
   guides(fill=FALSE)
-
 ggsave(paste("./figures/figures_exploratory/Proj/Boxplots/", nameList_climate[[i]],"/ViolinPlot_levelMinusMean.pdf", sep=""), 
        pLevelMinusMean_plot, width=16, height=9)
 
@@ -294,8 +313,13 @@ pLevelMinusMean_plot <-  pLevelMinusMean + geom_hline(yintercept=0, color="gray"
   ylab("Y of climate period - Mean(Y) of reference period ") + 
   xlab("Climate Period") +
   # scale_y_continuous(limits=c(-500, 500))  + 
-  theme_minimal() +  
-  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme_base() + 
+  # theme(plot.title = element_text(hjust = 0.5, size= 30)) + 
+  theme(legend.position="none")  + 
+  theme(title = element_text(hjust = 0.5, size= 18)) +
+  theme(strip.text.x = element_text(size = 18) ) + 
+  theme(axis.text.x = element_text(size = 15) ) + 
+  theme(axis.text.y = element_text(size = 15) ) + 
   guides(fill=FALSE)
 
 ggsave(paste("./figures/figures_exploratory/Proj/Boxplots/", nameList_climate[[i]],"/ViolinPlot_levelMinusMean_noLimit.pdf", sep=""), 
@@ -317,11 +341,16 @@ pLevelMinusLevel_plot <- pLevelMinusLevel +
   ylab("Y of climate period - Y of reference period ") + 
   xlab("Climate Period") +
   # scale_y_continuous(limits=c(-1000, 500))  +
-  theme_minimal() +  
-  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme_base() + 
+  # theme(plot.title = element_text(hjust = 0.5, size= 30)) + 
+  theme(legend.position="none")  + 
+  theme(title = element_text(hjust = 0.5, size= 18)) +
+  theme(strip.text.x = element_text(size = 18) ) + 
+  theme(axis.text.x = element_text(size = 15) ) + 
+  theme(axis.text.y = element_text(size = 15) ) + 
   guides(fill=FALSE)
 
-ggsave(paste("./figures/figures_exploratory/Proj/Boxplots/", nameList_climate[[i]],"/ViolinPlot_levelMinusLevel.pdf", sep="") , pLevelMinusLevel_plot, width=16, height=9)
+ggsave(paste("./figures/figures_exploratory/Proj/Boxplots/", nameList_climate[[i]],"/ViolinPlot_levelMinusLevel.png", sep="") , pLevelMinusLevel_plot, dpi = 100, width=16, height=9)
 
 
 

@@ -135,6 +135,20 @@ summary(lm.fit_SMI_6_Jun_Aug_anomaly_demean )
 par(mfrow=c(2,2))
 # plot(lm.fit_SMI_6_Jun_Aug_anomaly_demean, which=c(1:4))
 
+######################################################
+#### Export all Regression Results via stargazer ####
+####################################################
+# stargazer( 
+#   lm.fit_SMI_6_Jun_Aug_anomaly_demean, 
+#   type="text",
+#   out= "./figures/figures_exploratory/Train/RegressionResults/lm.fit_SMI_6_Jun_Aug_anomaly_demean.txt"
+#   # , 
+#   # column.labels = c("level","level_demean","anomaly", "anomaly_demean", "noMeteo_anomaly_demean", 
+#   #                   "noPrec_anomaly_demean","noSMI_anomaly_demean", "noSMI_anomaly_demean_linear", 
+#   #                   "SMIOct6_anomaly_demean", "oComId_anomaly_demean")
+# )
+
+
 
 # ## Cross Validate to derive out of sample adjusted R² ##
 # library(DAAG)

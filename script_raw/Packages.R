@@ -42,6 +42,7 @@ library(mgcv)
 library(earth)
 library(bootstrap)
 library(ggpubr)
+library(multidplyr)
 
 
 detach(package:dplyr)

@@ -32,7 +32,7 @@ dir.create(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climat
 }
 
 #### Load tidy data.frame of Yield and Yield_Anomaly Predictions  ####
-PredictData_df_tidy <- read_csv(paste("./data/data_proj/output/Climate_predicted_allRCMs.csv", sep="") )
+PredictData_df_tidy <- read_csv(paste("./data/data_proj/output/Climate_predicted_allRCMs_total.csv", sep="") )
 PredictData_df_tidy
 
 #################################################################################################
@@ -98,10 +98,12 @@ test_data_grouped_2021_anomaly_list <-
   test_data_grouped_2070_anomaly_plots_list_noTitle_noLegend <- 
   test_data_grouped_2021_anomaly_plots_paired_list_noTitle_noLegend <- 
   test_data_grouped_2070_anomaly_plots_paired_list_noTitle_noLegend <- 
-  list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMI=list())
+  list(MPI=list(), DMI=list(), KNMI=list(), ICTP=list(), SMI=list(), All_RCMs = list())
 
 #### Lists Names used in figures ####
 nameList_climate
+
+namelist_RCMs_total <- c(namelist_RCMs, "All_RCMs")
 
 s=1
 s
@@ -132,7 +134,7 @@ plot_variables = function (dataSet, timeP, paired,  Var, Tit, Leg){
     # ggtitle("2021 - Anomalies - non paired") 
     scale_fill_brewer(type = "seq", palette = "Blues", direction = -1,  drop = FALSE,
                       labels=c("< 0.05", "< 0.1", "> 0.1")) + 
-    guides(fill = guide_legend(title="p-values - \nH0: no shift in mean"))  +
+    guides(fill = guide_legend(title="p-values"))  +
     theme_bw()  +
     theme(legend.position = list_legend_Variables[Leg]) +
     # theme(legend.title=element_blank()) +
@@ -140,11 +142,11 @@ plot_variables = function (dataSet, timeP, paired,  Var, Tit, Leg){
   
 }
 
-
+# - \nH0: no shift in mean
 
 #### Start of loop trough the five RCMs ####
-for (l in seq_along( namelist_RCMs)){
-  
+for (l in seq_along( namelist_RCMs_total)){
+  print(namelist_RCMs_total[[l]])
   #### Create directory for output of this loop ####
 
   # 
@@ -157,7 +159,7 @@ for (l in seq_along( namelist_RCMs)){
   ## Compare Anomalies of 1971 -2000  to 2070 - 2099 ## 
   test_data_grouped_2070_anomaly_list[[l]]  <- 
     test_data %>% 
-    filter(RCM == namelist_RCMs[[l]])   %>%
+    filter(RCM == namelist_RCMs_total[[l]])   %>%
     group_by(comId) %>%
     summarise(test_sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean                  = wilcox.test(sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_1971,  
                                                                                  sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_2070)$p.value,
@@ -180,7 +182,7 @@ for (l in seq_along( namelist_RCMs)){
   ## Compare Anomalies of 1971 - 2000 to 2021 - 2050 ##
   test_data_grouped_2021_anomaly_list[[l]]  <- 
     test_data %>% 
-    filter(RCM == namelist_RCMs[[l]])   %>%
+    filter(RCM == namelist_RCMs_total[[l]])   %>%
     group_by(comId) %>%
     summarise(test_sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean                  = wilcox.test(sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_1971,  
                                                                                  sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_2021)$p.value, 
@@ -234,17 +236,38 @@ for (l in seq_along( namelist_RCMs)){
   
   timeP <- 2
   test_data_grouped_2070_anomaly_plots_list[[l]] <- plot_variables(test_data_grouped_2070_anomaly_spatial, timeP, paired,  Var, Tit, Leg)
-
   
-  ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2070_anomaly_",namelist_RCMs[[l]],".pdf", sep="") ,  
+  ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2070_anomaly_",namelist_RCMs_total[[l]],".pdf", sep="") ,  
          test_data_grouped_2070_anomaly_plots_list[[l]] , width=16, height=9) 
-  ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2021_anomaly_",namelist_RCMs[[l]],".pdf", sep="") , 
+  ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2021_anomaly_",namelist_RCMs_total[[l]],".pdf", sep="") , 
          test_data_grouped_2021_anomaly_plots_list[[l]] , width=16, height=9) 
-  # ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2070_",namelist_RCMs[[l]],".pdf", sep="") ,  test_data_grouped_2070_spatial_plot, width=16, height=9) 
-  # ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2021_",namelist_RCMs[[l]],".pdf", sep="") ,  test_data_grouped_2021_spatial_plot, width=16, height=9) 
-  # 
+  
+  #### non paired - no title no legend ####
+  Var <- 1
+  paired <- 1
+  Tit <- 1
+  Leg <- 2
+  
+  timeP <- 1
+  test_data_grouped_2021_anomaly_plots_list_noTitle[[l]] <- plot_variables(test_data_grouped_2021_anomaly_spatial, timeP, paired,  Var, Tit, Leg)
+  
+  timeP <- 2
+  test_data_grouped_2070_anomaly_plots_list_noTitle[[l]] <- plot_variables(test_data_grouped_2070_anomaly_spatial, timeP, paired,  Var, Tit, Leg)
+  
+  #### non paired - no title no legend ####
+  Var <- 1
+  paired <- 1
+  Tit <- 1
+  Leg <- 1
+  
+  timeP <- 1
+  test_data_grouped_2021_anomaly_plots_list_noTitle_noLegend[[l]] <- plot_variables(test_data_grouped_2021_anomaly_spatial, timeP, paired,  Var, Tit, Leg)
+  
+  timeP <- 2
+  test_data_grouped_2070_anomaly_plots_list_noTitle_noLegend[[l]] <- plot_variables(test_data_grouped_2070_anomaly_spatial, timeP, paired,  Var, Tit, Leg)
   
   
+
   #### paired ####
   Var <- 2
   timeP <- 2
@@ -257,31 +280,62 @@ for (l in seq_along( namelist_RCMs)){
   timeP <- 2
   test_data_grouped_2070_anomaly_plots_paired_list[[l]]  <-  plot_variables(test_data_grouped_2070_anomaly_spatial, timeP, paired,  Var, Tit, Leg)
 
-  ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2070_anomaly_paired_",namelist_RCMs[[l]],".pdf", sep="") ,  
+  ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2070_anomaly_paired_",namelist_RCMs_total[[l]],".pdf", sep="") ,  
          test_data_grouped_2070_anomaly_plots_paired_list[[l]], width=16, height=9) 
-  ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2021_anomaly_paired_",namelist_RCMs[[l]],".pdf", sep="") ,  
+  ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2021_anomaly_paired_",namelist_RCMs_total[[l]],".pdf", sep="") ,  
          test_data_grouped_2021_anomaly_plots_paired_list[[l]], width=16, height=9) 
-  # ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2070_paired_",namelist_RCMs[[l]],".pdf", sep="") ,  test_data_grouped_2070_spatial_plot, width=16, height=9) 
-  # ggsave(paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[s]],"/Wilcoxon_2021_paired_",namelist_RCMs[[l]],".pdf", sep="") ,  test_data_grouped_2021_spatial_plot, width=16, height=9) 
-  # 
   
+  #### paired - no title ####
+  Var <- 2
+  timeP <- 2
+  Tit <- 1
+  Leg <- 2
+  
+  timeP <- 1
+  test_data_grouped_2021_anomaly_plots_paired_list_noTitle[[l]] <- plot_variables(test_data_grouped_2021_anomaly_spatial, timeP, paired,  Var, Tit, Leg)
+  
+  timeP <- 2
+  test_data_grouped_2070_anomaly_plots_paired_list_noTitle[[l]]  <-  plot_variables(test_data_grouped_2070_anomaly_spatial, timeP, paired,  Var, Tit, Leg)
+  
+  #### paired - no title no legend ####
+  Var <- 2
+  timeP <- 2
+  Tit <- 1
+  Leg <- 1
+  
+  timeP <- 1
+  test_data_grouped_2021_anomaly_plots_paired_list_noTitle_noLegend[[l]] <- plot_variables(test_data_grouped_2021_anomaly_spatial, timeP, paired,  Var, Tit, Leg)
+  
+  timeP <- 2
+  test_data_grouped_2070_anomaly_plots_paired_list_noTitle_noLegend[[l]]  <-  plot_variables(test_data_grouped_2070_anomaly_spatial, timeP, paired,  Var, Tit, Leg)
 }
 # }
    
 # rm(list=ls())
 
-DMI_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list[[1]], test_data_grouped_2070_anomaly_plots_paired_list[[1]], labels = c("a1)", "a2)"),
+DMI_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list_noTitle_noLegend[[1]], test_data_grouped_2070_anomaly_plots_paired_list_noTitle_noLegend[[1]], labels = c("a1)", "a2)"),
                                               ncol=1, nrow=2) , top = text_grob("DMI", color = "black", face = "bold", size = 20, family= " Arial"))
-ICTP_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list[[2]], test_data_grouped_2070_anomaly_plots_paired_list[[2]], labels = c("b1)", "b2)"),
+ICTP_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list_noTitle_noLegend[[2]], test_data_grouped_2070_anomaly_plots_paired_list_noTitle_noLegend[[2]], labels = c("b1)", "b2)"),
                                               ncol=1, nrow=2) , top = text_grob("ICTP", color = "black", face = "bold", size = 20, family= " Arial"))
-KNMI_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list[[3]], test_data_grouped_2070_anomaly_plots_paired_list[[3]], labels = c("c1)", "c2)"),
+KNMI_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list_noTitle_noLegend[[3]], test_data_grouped_2070_anomaly_plots_paired_list_noTitle_noLegend[[3]], labels = c("c1)", "c2)"),
                                               ncol=1, nrow=2) , top = text_grob("KNMI", color = "black", face = "bold", size = 20, family= " Arial"))
-MPI_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list[[4]], test_data_grouped_2070_anomaly_plots_paired_list[[4]], labels = c("d1)", "d2)"),
+MPI_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list_noTitle_noLegend[[4]], test_data_grouped_2070_anomaly_plots_paired_list_noTitle_noLegend[[4]], labels = c("d1)", "d2)"),
                                               ncol=1, nrow=2) , top = text_grob("MPI", color = "black", face = "bold", size = 20, family= " Arial"))
-SMHI_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list[[5]], test_data_grouped_2070_anomaly_plots_paired_list[[5]], labels = c("e1)", "e2)"),
-                                              ncol=1, nrow=2) , top = text_grob("SMHI", color = "black", face = "bold", size = 20, family= " Arial"))
+SMHI_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list_noTitle_noLegend[[5]], test_data_grouped_2070_anomaly_plots_paired_list_noTitle_noLegend[[5]], labels = c("e1)", "e2)"),
+                                              ncol=1, nrow=2
+                                              # , common.legend = TRUE, legend = "right"
+                                              ) , top = text_grob("SMHI", color = "black", face = "bold", size = 20, family= " Arial"))
+
+AllRCMs_annotated <-  annotate_figure(  ggarrange(test_data_grouped_2021_anomaly_plots_paired_list_noTitle[[6]], 
+                                                  test_data_grouped_2070_anomaly_plots_paired_list_noTitle[[6]], 
+                                                  labels = c("f1)", "f2)"),
+                                              ncol=1, nrow=2, common.legend = TRUE, legend = "right") , top = text_grob("Avg. of RCMs", color = "black", face = "bold", size = 20, family= " Arial"))
 
 
 test_data_grouped_2021_anomaly_paired_list_allPlots <- 
-  ggarrange( DMI_annotated, ICTP_annotated, KNMI_annotated, MPI_annotated, SMHI_annotated ,  ncol=5, nrow = 1, 
-             common.legend = TRUE, legend = "right", align ="v")
+  ggarrange( DMI_annotated, ICTP_annotated, KNMI_annotated, MPI_annotated, SMHI_annotated, AllRCMs_annotated ,  ncol=6, nrow = 1, 
+             common.legend = TRUE, legend = "right", align ="hv")
+
+test_data_grouped_2021_anomaly_paired_list_allPlots  %>%
+  ggexport(filename = paste("./figures/figures_exploratory/Proj/Wilcoxon/", nameList_climate[[1]],"/Wilcoxon_AllRCMs.png", sep=""), 
+           width=1500, height=500)

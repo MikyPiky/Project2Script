@@ -7,7 +7,7 @@
 Here I look at climate model specific plots ("MPI","DMI","KNMI","ICTP","SMHI")
 
 Loop through five climate models 
-- read in tidy data including all climate models
+- read in tidy data including all climate models: use of data which also have a RCM Indikator for "All_RCMs"
 - Make container where to store the plots in for the climate period 2070 - 2099, depending on whether with or without: title, legend
 - Loop to create Means and SD of the absolute values for the climate periods (1971 - 2000, 2021 - 2050, 2070 - 2099) -> output is list of data.frames
 - Define colorRamps used in the different plots
@@ -56,13 +56,15 @@ source("script/script_raw/BaseModel.R")
 ' is loaded in BaseMode.R '
 
 
-###########################################################################
-#### Load Meteo_df_tidy data.frames including a column for the models ####
-#########################################################################
-MeteoMonth_df_tidy_total <- read_csv("./data/data_proj/output/Climate_predicted_allRCMs.csv")
+########################################################################################
+#### Load Meteo_df_tidy data.frames including a column for the RCMs and "All RCMs" ####
+######################################################################################
+MeteoMonth_df_tidy_total <- read_csv("./data/data_proj/output/Climate_predicted_allRCMs_total.csv")
+summary(MeteoMonth_df_tidy_total)
 
 ###################################################################
 #### Make container which stores the results of each loop run ####
+#################################################################
 
 #### RCM container ####
 ' These containers store the plots of the yield predictions which are needed for the combined plots.'
@@ -189,7 +191,7 @@ sc_SMI_Aug_Sd <- scale_fill_gradientn("August SMI", colours = myPalette(100), li
 
 #### Yield Anomaly Mean ####
 myPalette <- colorRampPalette((brewer.pal(11, "BrBG")))
-sc_Yield_Mean <- scale_fill_gradientn("dt/ha", colours = myPalette(100),  limits=c(-70, 70))
+sc_Yield_Mean <- scale_fill_gradientn("dt/ha", colours = myPalette(100),  limits=c(-60, 60))
 
 #### Yield Anomaly SD ####
 myPalette <- colorRampPalette((brewer.pal(11, "PiYG")))
@@ -230,7 +232,7 @@ list_variableName_export <- c(paste(c("July_Temp", "July_Prec", "June_SMI", "Jul
                             paste( nameList_climate, "SD", sep="_"))
 
 ## Legend List
-list_legend_Variables <- c("none", "bottom")
+list_legend_Variables <- c("none", "right")
 list_legend_export <- c("noLegend", "legend")
 ##  
 list_titleVariables <- list(element_text(color="white") , element_text(color="black") )
@@ -250,9 +252,10 @@ plot_variables = function (TimePeriod, ExVar, RCMs, Tit, Leg){
     ggtitle(paste(unique(TimePeriod$time),  ": ", list_variableName[[ExVar]], " - ", namelist_RCMs_total[[RCMs]],  sep="") ) +
     list_sc[[ExVar]] +
     theme_bw()  +
-    theme(legend.position=list_legend_Variables[Leg]) +
-    theme(legend.title=element_blank()) +
-    theme(title =list_titleVariables [[Tit]] )
+    theme(legend.position = list_legend_Variables[Leg]) +
+    # theme(legend.title=element_blank()) +
+    theme(plot.title =list_titleVariables [[Tit]] )
+  
 }
 
 # rm(Stat)
@@ -273,12 +276,12 @@ for (RCMs in seq_along(namelist_RCMs_total)){
   #### Filter for particular RCMs ####
   MeteoMonth_df_tidy <- MeteoMonth_df_tidy_total %>% filter(RCM == namelist_RCMs_total[[RCMs]])
   print(unique(MeteoMonth_df_tidy$RCM))
-
+  summary(MeteoMonth_df_tidy$sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean)
 
   
-  #############################################################################################################################
-  #### Loop to create Means and SD of the absolute values for the climate periods (1971 - 2000, 2021 - 2050, 2070 - 2099) ####
   ###########################################################################################################################
+  #### Loop to create Means and SD of the absolute values for the climate periods 1971 - 2000, 2021 - 2050, 2070 - 2099 ####
+  #########################################################################################################################
 
   #### Generate list with data.frame container for each climate period: Mean ####
   MeteoMonth_df_tidy_summaries_list <- list(MeteoMonth_df_tidy_summaries_1979 = data.frame(), MeteoMonth_df_tidy_summaries_2021= data.frame(),
@@ -287,7 +290,9 @@ for (RCMs in seq_along(namelist_RCMs_total)){
   #### List to store sf.data.frames ####
   MeteoMonth_df_tidy_summaries_sf_list <- list(MeteoMonth_df_tidy_summaries_sf_1979 = data.frame(), MeteoMonth_df_tidy_summaries_sf_2021= data.frame(),
                                                MeteoMonth_df_tidy_summaries_sf_2070 = data.frame())
-  #### Start of loop ####  
+  
+  #############################################
+  #### Start of loop - select for numerics ####  
   for (i in 1:3){
     MeteoMonth_df_tidy_summaries_list[[i]] <- MeteoMonth_df_tidy %>%  
       filter(year >=  climateyears_list[[1]][i] & year <= climateyears_list[[2]][i]) %>% 
@@ -304,6 +309,10 @@ for (RCMs in seq_along(namelist_RCMs_total)){
   summary(MeteoMonth_df_tidy_summaries_list[[2]])
   summary(MeteoMonth_df_tidy_summaries_sf_list[[2]])
   
+  summary(MeteoMonth_df_tidy_summaries_list[[3]])
+  summary(MeteoMonth_df_tidy_summaries_sf_list[[3]])
+  
+  # View(MeteoMonth_df_tidy_summaries_list[[2]])
   
   ##################################################################################################################################
   #### Create differences in between the reference climate period (1971 - 2000) and the projections (2021 - 2050, 2070 - 2099) ####
@@ -314,18 +323,22 @@ for (RCMs in seq_along(namelist_RCMs_total)){
   Grundsätzlich stellt sich die Frage, wie dies auf SD übertragen werden kann. 
   '
   
-  MeteoMonth_df_tidy_summaries_list[[1]]
+  
+  ## Create Differences ##
   MeteoMonth_df_tidy_summaries_diff2021 <- MeteoMonth_df_tidy_summaries_list[[2]] - MeteoMonth_df_tidy_summaries_list[[1]]
   MeteoMonth_df_tidy_summaries_diff2070 <- MeteoMonth_df_tidy_summaries_list[[3]] - MeteoMonth_df_tidy_summaries_list[[1]] 
   MeteoMonth_df_tidy_summaries_diff2021
+  summary(  MeteoMonth_df_tidy_summaries_diff2021)
   
-  
+  ## Add new comIds ##
   MeteoMonth_df_tidy_summaries_diff2021$comId <- MeteoMonth_df_tidy_summaries_list[[2]]$comId
   MeteoMonth_df_tidy_summaries_diff2070$comId <- MeteoMonth_df_tidy_summaries_list[[2]]$comId
   
+  ## Build new RCM Indicator ##
   MeteoMonth_df_tidy_summaries_diff2021$RCM <- rep(unique(MeteoMonth_df_tidy$RCM), 406)
   MeteoMonth_df_tidy_summaries_diff2070$RCM <- rep(unique(MeteoMonth_df_tidy$RCM), 406)
   
+  ## Build Climate Period Indicator ##
   MeteoMonth_df_tidy_summaries_diff2021$time <- rep("(2021 - 2099) - (1971 - 2000)", 406)
   MeteoMonth_df_tidy_summaries_diff2070$time <- rep("(2070 - 2099) - (1971 - 2000)", 406)
   
@@ -339,31 +352,39 @@ for (RCMs in seq_along(namelist_RCMs_total)){
   MeteoMonth_df_tidy_summaries_diff2021_sf <-  inner_join(vg2500_krs, MeteoMonth_df_tidy_summaries_diff2021, by = c("comId"))
   MeteoMonth_df_tidy_summaries_diff2070_sf <-  inner_join(vg2500_krs, MeteoMonth_df_tidy_summaries_diff2070, by = c("comId"))
   
-  # MeteoMonth_df_tidy_summaries_diff2021_sf$comId ## order of vg2500_krs is kept (sort=F)
-  # 
-  # MeteoMonth_df_tidy_summaries_diff2021_sf
-  # 
-  # summary(MeteoMonth_df_tidy_summaries_diff2070_sf)
-  
-  ############################################################################################################################################################################
-  ############################################################################################################################################################################
-  # ####################################
-  # #### Export summary statistics ####
-  # ##################################
-  
-  stargazer(MeteoMonth_df_tidy_summaries_diff2021, type = "text", title="Descriptive statistics", digits=3,
-            out=paste("./figures/figures_exploratory/Proj/MeteoVar/","DeskriptiveStats_diff2021_", namelist_RCMs_total[[t]], ".txt", sep=""))
-  stargazer(MeteoMonth_df_tidy_summaries_diff2070, type = "text", title="Descriptive statistics", digits=3,
-            out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_diff2070_",  namelist_RCMs_total[[t]],".txt", sep=""))
-  stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[1]]), type = "text", title="Descriptive statistics", digits=3,
-            out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_1970_", namelist_RCMs_total[[t]],".txt", sep=""))
-  stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[2]]), type = "text", title="Descriptive statistics", digits=3,
-            out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_2021_", namelist_RCMs_total[[t]],".txt", sep=""))
-  stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[3]]), type = "text", title="Descriptive statistics", digits=3,
-            out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_2070_", namelist_RCMs_total[[t]],".txt", sep=""))
 
+  #### Select Important Variables ####
+  MeteoMonth_df_tidy_summaries_diff2021_sf_selected <- MeteoMonth_df_tidy_summaries_diff2021_sf %>% select(SMI_Jun_Mean, SMI_Aug_Mean, P_Jul_demeaned_Mean , T_Jul_demeaned_Mean, 
+                                                                                                           sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_Mean, 
+                                                                                                           SMI_Jun_Sd, SMI_Aug_Sd, P_Jul_demeaned_Sd , T_Jul_demeaned_Sd, 
+                                                                                                           sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_Sd)
+  
+  MeteoMonth_df_tidy_summaries_diff2070_sf_selected <- MeteoMonth_df_tidy_summaries_diff2070_sf %>% select(SMI_Jun_Mean, SMI_Aug_Mean, P_Jul_demeaned_Mean , T_Jul_demeaned_Mean, 
+                                                                                                           sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_Mean, 
+                                                                                                           SMI_Jun_Sd, SMI_Aug_Sd, P_Jul_demeaned_Sd , T_Jul_demeaned_Sd, 
+                                                                                                           sMA_lm.fit_SMI_6_Jun_Aug_anomaly_demean_Sd)
   
   
+  ############################################################################################################################################################################
+  ############################################################################################################################################################################
+  ######################################################
+  #### Export summary statistics of all Variables  ####
+  ####################################################
+  # 
+  # ## Differences ##
+  # stargazer(MeteoMonth_df_tidy_summaries_diff2021, type = "text", title="Descriptive statistics", digits=3,
+  #           out=paste("./figures/figures_exploratory/Proj/MeteoVar/","DeskriptiveStats_diff2021_", namelist_RCMs_total[[RCMs]], ".txt", sep=""))
+  # stargazer(MeteoMonth_df_tidy_summaries_diff2070, type = "text", title="Descriptive statistics", digits=3,
+  #           out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_diff2070_",  namelist_RCMs_total[[RCMs]],".txt", sep=""))
+  # 
+  # ## Absolute Values ##
+  # stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[1]]), type = "text", title="Descriptive statistics", digits=3,
+  #           out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_1970_", namelist_RCMs_total[[RCMs]],".txt", sep=""))
+  # stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[2]]), type = "text", title="Descriptive statistics", digits=3,
+  #           out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_2021_", namelist_RCMs_total[[RCMs]],".txt", sep=""))
+  # stargazer(as.data.frame(MeteoMonth_df_tidy_summaries_list[[3]]), type = "text", title="Descriptive statistics", digits=3,
+  #           out=paste("./figures/figures_exploratory/Proj/MeteoVar/", "DeskriptiveStats_2070_", namelist_RCMs_total[[RCMs]],".txt", sep=""))
+
 
   ##############################################################################################################################################################################
   ##############################################################################################################################################################################
@@ -380,6 +401,7 @@ for (RCMs in seq_along(namelist_RCMs_total)){
   - SMI in June
   - SMI in July
   - SMI in August
+  - Yield Output
   '
 
   #########################################################################

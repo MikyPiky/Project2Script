@@ -98,6 +98,8 @@
   - Output: - Prediction of silage maize yield anomalies based on different estimation models for each RCM in namelist_model:
           - Climate_predicted <- ./data/data_proj/output/", namelist_RCMs[[r]],"/Climate_predicted.csv
           - Climate_predicted_allRCMs <- ./data/data_proj/output/Climate_predicted_allRCMs.csv
+          - Climate_predicted_total <- ./data/data_proj/output/Climate_predicted_allRCMs_total.csv (including RCM indicator for "ALL RCMs")
+
 '
 
 #### Projection evaluation ####

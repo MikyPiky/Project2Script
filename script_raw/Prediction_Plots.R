@@ -82,7 +82,7 @@ plot_mean_1971_list <- plot_mean_diff2021_list <-plot_mean_diff2070_list <- plot
 
 't indexes RCMs, s indexes prediction models'
 
-t = s= 1
+t = s = 1
 #############################################
 #### Loop through all 5 climate models  ####
 ###########################################

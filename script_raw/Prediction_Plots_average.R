@@ -87,8 +87,6 @@ climateyears_list <- list(c(1971,2021,2070), c(2000, 2050, 2099))
 #### Load tidy data.frame of Yield_Anomaly Predictions for RCM t  ####
 #####################################################################
 Climate_predicted_all <- read_csv("./data/data_proj/output/Climate_predicted_allRCMs.csv")
-
-
 Climate_predicted_all$RCM <- rep("RCM_average", dim(Climate_predicted_all ) [1])
 # summary(Climate_predicted_all)
 
